@@ -1,189 +1,279 @@
 "use client";
 
-import { useRef, useEffect } from "react";
-import Image from "next/image";
+import { motion, useMotionTemplate, useMotionValue } from "framer-motion";
+import { ArrowUpRight, Fingerprint, Globe, Activity, Shield } from "lucide-react";
 import Link from "next/link";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ArrowUpRight } from "lucide-react";
-
-gsap.registerPlugin(ScrollTrigger);
-
-const projects = [
-    {
-        title: "Global Accounts",
-        category: "Banking Infrastructure",
-        description: "Unified dashboard for all your international accounts.",
-        image: "/feature1.png",
-        href: "/features/accounts",
-        pill: "FINANCE",
-        tagline: "FROM HIRING TO HIRED"
-    },
-    {
-        title: "Smart Insights",
-        category: "AI Analysis",
-        description: "Automated advice based on spending.",
-        image: "https://images.unsplash.com/photo-1621264448270-9ef00e88a935?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDB8fGZpbmFuY2V8ZW58MHx8MHx8fDA%3D",
-        href: "/features/insights",
-        pill: "AI ANALYTICS",
-        tagline: "ORGANIZED SO YOU DON'T HAVE TO BE"
-    },
-    {
-        title: "Asset Tracking",
-        category: "Wealth Management",
-        description: "Real-time valuation of your portfolio.",
-        image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2670&auto=format&fit=crop",
-        href: "/features/assets",
-        pill: "WEALTH",
-        tagline: "TRACK EVERYTHING EVERYWHERE"
-    },
-    {
-        title: "Tax Harvesting",
-        category: "Fiscal Optimization",
-        description: "Automated loss harvesting algorithms.",
-        image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2670&auto=format&fit=crop",
-        href: "/features/tax",
-        pill: "OPTIMIZATION",
-        tagline: "KEEP MORE OF WHAT YOU EARN"
-    },
-    {
-        title: "Neural Trading",
-        category: "Automated Execution",
-        description: "High-frequency trading bot integration.",
-        image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2670&auto=format&fit=crop",
-        href: "/features/trading",
-        pill: "TRADING",
-        tagline: "ALWAYS ON, ALWAYS PROFITABLE"
-    }
-];
+import { MouseEvent } from "react";
 
 export default function ProjectShowcase() {
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const ctx = gsap.context(() => {
-            // Reveal animations for projects
-            const projectItems = gsap.utils.toArray<HTMLElement>(".project-item");
-            projectItems.forEach((item, i) => {
-                gsap.fromTo(
-                    item,
-                    { y: 100, opacity: 0 },
-                    {
-                        y: 0,
-                        opacity: 1,
-                        duration: 1,
-                        ease: "power3.out",
-                        scrollTrigger: {
-                            trigger: item,
-                            start: "top 85%",
-                            toggleActions: "play none none reverse",
-                        },
-                    }
-                );
-            });
-        }, containerRef);
-
-        return () => ctx.revert();
-    }, []);
-
     return (
-        <section ref={containerRef} className="relative w-full py-32 px-4 md:px-8 bg-[#F3F0E7] text-black overflow-hidden">
-            {/* Organic Blobs Background */}
-            <div className="absolute left-[-20%] top-[40%] w-[60vw] h-[60vh] bg-[#2A86FF] rounded-full blur-[80px] opacity-40 pointer-events-none mix-blend-multiply" />
-            <div className="absolute right-[-20%] bottom-[10%] w-[60vw] h-[60vh] bg-[#FF9F1C] rounded-full blur-[80px] opacity-40 pointer-events-none mix-blend-multiply" />
+        <section className="w-full py-32 bg-[#F8FAFC] text-slate-900 overflow-hidden px-4 md:px-8 relative">
 
-            <div className="container mx-auto max-w-[95vw] relative z-10">
+            {/* Background Effects */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.05),transparent_50%)] pointer-events-none" />
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-40 brightness-100 contrast-150 pointer-events-none mix-blend-multiply" />
 
+            <div className="container mx-auto relative z-10">
                 {/* Header */}
-                <div className="flex flex-col mb-20">
-                    <h2 className="text-6xl md:text-9xl tracking-tight leading-none mb-4">
-                        <span className="font-bold">Our </span>
-                        <span className="font-serif italic font-light">Features</span>
-                    </h2>
-                    <p className="text-xs font-bold tracking-widest uppercase ml-2 opacity-60">
-                        GIVING STARTUPS THE UNFAIR ADVANTAGE
-                    </p>
+                <div className="mb-24 flex flex-col md:flex-row justify-between items-end gap-6">
+                    <div>
+                        <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-4 text-slate-900">
+                            System <br />
+                            <span className="text-slate-400 font-serif italic">Architecture</span>
+                        </h2>
+                    </div>
+                    <div className="mb-4">
+                        <p className="text-sm font-mono text-blue-600 mb-2">/// INDEX: 001-ALPHA</p>
+                        <Link href="/docs" className="group flex items-center gap-2 text-slate-900 border-b border-slate-300 pb-1 hover:border-slate-900 transition-colors">
+                            <span className="text-sm font-bold tracking-widest uppercase">View All Systems</span>
+                            <ArrowUpRight className="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
+                        </Link>
+                    </div>
                 </div>
 
-                {/* Projects Grid (1-2-2 Layout) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {projects.map((project, index) => (
-                        <Link
-                            key={index}
-                            href={project.href}
-                            className={`project-item group relative block ${index === 0 ? "md:col-span-2" : "md:col-span-1"}`}
-                        >
-                            {/* Card Container */}
-                            <div className="relative w-full overflow-hidden rounded-[2rem] border-4 border-[#1A1A1A] bg-white transition-transform duration-500 hover:scale-[1.01]">
+                {/* 10-Column Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-10 gap-6 auto-rows-[450px]">
 
-                                {/* Top Bar inside Card */}
-                                <div className="absolute top-0 left-0 right-0 h-14 border-b-4 border-[#1A1A1A] z-20 bg-white/10 backdrop-blur-sm flex items-center px-6 justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <span className="font-bold text-xs uppercase">{project.title}</span>
-                                    <div className="flex gap-2">
-                                        <span className="border border-black rounded-full px-3 py-1 text-[10px] font-bold uppercase">{project.pill}</span>
-                                    </div>
-                                </div>
-
-                                {/* Main Image Area */}
-                                <div className="aspect-[4/3] w-full relative flex items-center justify-center overflow-hidden bg-gray-100">
-                                    <Image
-                                        src={project.image}
-                                        alt={project.title}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                    {/* Overlay Content */}
-                                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center p-12">
-                                        <div className="relative w-full h-full bg-black/10 rounded-xl shadow-2xl flex items-center justify-center overflow-hidden border border-white/20 backdrop-blur-sm">
-                                            <div className="text-center text-white p-8">
-                                                <ArrowUpRight className="h-16 w-16 mx-auto mb-4" />
-                                                <h3 className="text-3xl font-bold uppercase">{project.title}</h3>
-                                                <p className="text-[10px] tracking-[0.2em] mt-4 uppercase">{project.tagline}</p>
-                                            </div>
+                    {/* Card 1: 30% - Identity */}
+                    <Link href="/features/identity" className="md:col-span-3 group relative block h-full">
+                        <GlassCard>
+                            <div className="relative z-10 h-full flex flex-col justify-between p-8">
+                                <div>
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="h-12 w-12 rounded-xl bg-white shadow-sm flex items-center justify-center border border-slate-100">
+                                            <Fingerprint className="text-blue-600 w-6 h-6" />
                                         </div>
+                                        <ArrowUpRight className="text-slate-400 group-hover:text-slate-900 transition-colors" />
                                     </div>
+                                    <h3 className="text-2xl font-bold mb-2 text-slate-900">Identity</h3>
+                                    <p className="text-slate-500 text-sm">Biometric-grade authentication protocols.</p>
                                 </div>
-
-                                {/* Bottom Strip */}
-                                <div className="bg-[#1A1A1A] text-white p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                    <div className="flex flex-col">
-                                        <h3 className="text-2xl font-bold uppercase mb-1">{project.title}</h3>
-                                        <p className="text-xs text-gray-400 uppercase tracking-wider">{project.description}</p>
-                                    </div>
-                                    <div className="flex gap-2 flex-wrap">
-                                        <span className="border border-white/30 rounded-full px-4 py-1.5 text-[10px] uppercase font-medium hover:bg-white hover:text-black transition-colors">Learn More</span>
-                                    </div>
+                                <div className="relative flex items-center justify-center py-8">
+                                    <FingerprintScan />
                                 </div>
                             </div>
-                        </Link>
-                    ))}
-                </div>
-
-                {/* Typography CTA Redesign */}
-                <div className="py-32 flex flex-col md:flex-row items-center justify-center gap-6 text-center md:text-left">
-                    <span className="text-6xl md:text-8xl font-serif leading-[0.9] tracking-tight text-right">
-                        We do <br />
-                        many
-                    </span>
-
-                    <Link
-                        href="/docs"
-                        className="group relative px-14 py-5 bg-black text-white rounded-full overflow-hidden flex items-center justify-center gap-2 hover:scale-105 transition-transform duration-300 min-w-[200px]"
-                    >
-                        <div className="flex flex-col items-center">
-                            <span className="relative z-10 text-[20px] font-extrabold uppercase tracking-[0.2em] mb-1">SEE ALL</span>
-                            <span className="relative z-10 text-[20px] font-bold tracking-[0.2em] font-serif italic">features</span>
-                        </div>
-                        <ArrowUpRight className="relative z-10 w-12 h-12 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                        <div className="absolute inset-0 bg-zinc-800 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
+                        </GlassCard>
                     </Link>
 
-                    <span className="text-6xl md:text-8xl font-serif leading-[0.9] tracking-tight text-left">
-                        things very <br />
-                        well.
-                    </span>
+                    {/* Card 2: 70% - Banking Infrastructure */}
+                    <Link href="/features/banking" className="md:col-span-7 group relative block h-full">
+                        <GlassCard>
+                            <div className="relative z-10 h-full flex flex-col p-8 overflow-hidden">
+                                <div className="flex justify-between items-start mb-8 relative z-20">
+                                    <div>
+                                        <div className="h-12 w-12 rounded-xl bg-white shadow-sm flex items-center justify-center mb-6 border border-slate-100">
+                                            <Globe className="text-indigo-600 w-6 h-6" />
+                                        </div>
+                                        <h3 className="text-3xl font-bold mb-2 text-slate-900">Global Infrastructure</h3>
+                                        <p className="text-slate-500 max-w-md">Unified liquidity layer connecting 140+ fiat currencies and 50+ blockchains.</p>
+                                    </div>
+                                    <ArrowUpRight className="text-slate-400 group-hover:text-slate-900 transition-colors" />
+                                </div>
+
+                                <div className="absolute inset-0 top-0 left-0 w-full h-full opacity-60">
+                                    <NetworkMap />
+                                </div>
+                            </div>
+                        </GlassCard>
+                    </Link>
+
+                    {/* Card 3: 60% - Wealth Management */}
+                    <Link href="/features/wealth" className="md:col-span-6 group relative block h-full">
+                        <GlassCard>
+                            <div className="relative z-10 h-full flex flex-col p-8">
+                                <div className="flex justify-between items-start mb-auto">
+                                    <div>
+                                        <div className="h-12 w-12 rounded-xl bg-white shadow-sm flex items-center justify-center mb-6 border border-slate-100">
+                                            <Activity className="text-emerald-600 w-6 h-6" />
+                                        </div>
+                                        <h3 className="text-2xl font-bold mb-2 text-slate-900">Wealth OS</h3>
+                                        <p className="text-slate-500 text-sm">Automated portfolio rebalancing.</p>
+                                    </div>
+                                    <ArrowUpRight className="text-slate-400 group-hover:text-slate-900 transition-colors" />
+                                </div>
+
+                                <div className="mt-8 relative h-48 w-full bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                                    <TradingChart />
+                                </div>
+                            </div>
+                        </GlassCard>
+                    </Link>
+
+                    {/* Card 4: 40% - Tax Optimization */}
+                    <Link href="/features/tax" className="md:col-span-4 group relative block h-full">
+                        <GlassCard>
+                            <div className="relative z-10 h-full flex flex-col justify-between p-8">
+                                <div>
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="h-12 w-12 rounded-xl bg-white shadow-sm flex items-center justify-center border border-slate-100">
+                                            <Shield className="text-amber-500 w-6 h-6" />
+                                        </div>
+                                        <ArrowUpRight className="text-slate-400 group-hover:text-slate-900 transition-colors" />
+                                    </div>
+                                    <h3 className="text-2xl font-bold mb-2 text-slate-900">Fiscal Shield</h3>
+                                    <p className="text-slate-500 text-sm">Regulatory compliance engine.</p>
+                                </div>
+
+                                <div className="relative flex items-center justify-center h-40">
+                                    <ShieldScan />
+                                </div>
+                            </div>
+                        </GlassCard>
+                    </Link>
+
                 </div>
             </div>
         </section>
     );
+}
+
+// ------------------------------------
+// UI Components
+// ------------------------------------
+
+function GlassCard({ children }: { children: React.ReactNode }) {
+    const mouseX = useMotionValue(0);
+    const mouseY = useMotionValue(0);
+
+    function handleMouseMove({ currentTarget, clientX, clientY }: MouseEvent) {
+        const { left, top } = currentTarget.getBoundingClientRect();
+        mouseX.set(clientX - left);
+        mouseY.set(clientY - top);
+    }
+
+    return (
+        <div
+            className="group relative h-full w-full rounded-[20px] bg-white/60 border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.05)] backdrop-blur-xl overflow-hidden transition-all hover:shadow-[0_16px_48px_rgba(0,0,0,0.1)]"
+            onMouseMove={handleMouseMove}
+        >
+            <motion.div
+                className="pointer-events-none absolute -inset-px rounded-[20px] opacity-0 transition duration-300 group-hover:opacity-100"
+                style={{
+                    background: useMotionTemplate`
+                        radial-gradient(
+                        650px circle at ${mouseX}px ${mouseY}px,
+                        rgba(255,255,255,0.8),
+                        transparent 80%
+                        )
+                    `,
+                }}
+            />
+            {children}
+        </div>
+    );
+}
+
+// ------------------------------------
+// Animation Components
+// ------------------------------------
+
+function FingerprintScan() {
+    return (
+        <div className="relative w-32 h-32 flex items-center justify-center">
+            <Fingerprint className="w-full h-full text-slate-200" strokeWidth={1} />
+            <div className="absolute inset-0 overflow-hidden animate-[scan_3s_ease-in-out_infinite]">
+                <Fingerprint className="w-full h-full text-blue-600 drop-shadow-[0_0_15px_rgba(37,99,235,0.3)]" strokeWidth={1} />
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-blue-600 shadow-[0_0_15px_#2563EB]" />
+            </div>
+            <style jsx>{`
+                @keyframes scan {
+                    0%, 100% { clip-path: inset(0 0 100% 0); }
+                    50% { clip-path: inset(0 0 0 0); }
+                }
+             `}</style>
+        </div>
+    )
+}
+
+function NetworkMap() {
+    return (
+        <svg className="w-full h-full opacity-60" viewBox="0 0 800 400">
+            {/* Abstract connections */}
+            <motion.path
+                d="M100,200 Q250,50 400,200 T700,200"
+                fill="none"
+                stroke="#6366f1" // Indigo
+                strokeWidth="2"
+                strokeDasharray="10 10"
+                initial={{ pathLength: 0, opacity: 0 }}
+                whileInView={{ pathLength: 1, opacity: 0.5 }}
+                transition={{ duration: 2 }}
+            />
+            <motion.path
+                d="M100,200 Q250,350 400,200 T700,200"
+                fill="none"
+                stroke="#6366f1"
+                strokeWidth="2"
+                strokeDasharray="10 10"
+                initial={{ pathLength: 0, opacity: 0 }}
+                whileInView={{ pathLength: 1, opacity: 0.5 }}
+                transition={{ duration: 2, delay: 0.5 }}
+            />
+
+            {/* Nodes */}
+            {[100, 400, 700].map((cx, i) => (
+                <g key={i}>
+                    <circle cx={cx} cy="200" r="4" fill="#6366f1" />
+                    <circle cx={cx} cy="200" r="20" fill="none" stroke="#6366f1" strokeOpacity="0.2">
+                        <animate attributeName="r" from="20" to="40" dur="2s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" from="0.5" to="0" dur="2s" repeatCount="indefinite" />
+                    </circle>
+                </g>
+            ))}
+        </svg>
+    )
+}
+
+function TradingChart() {
+    return (
+        <div className="absolute inset-0 flex items-end">
+            <svg className="w-full h-full" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="chartGradLight" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="rgba(16, 185, 129, 0.2)" />
+                        <stop offset="100%" stopColor="rgba(16, 185, 129, 0)" />
+                    </linearGradient>
+                </defs>
+                <motion.path
+                    d="M0,150 L50,140 L100,160 L150,120 L200,130 L250,80 L300,100 L350,50 L400,70 L450,30 L500,60 L550,20 L600,40"
+                    fill="none"
+                    stroke="#059669" // Emerald 600
+                    strokeWidth="2"
+                    initial={{ pathLength: 0 }}
+                    whileInView={{ pathLength: 1 }}
+                    transition={{ duration: 2 }}
+                />
+                <motion.path
+                    d="M0,150 L50,140 L100,160 L150,120 L200,130 L250,80 L300,100 L350,50 L400,70 L450,30 L500,60 L550,20 L600,40 V200 H0 Z"
+                    fill="url(#chartGradLight)"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    transition={{ duration: 2, delay: 0.5 }}
+                />
+            </svg>
+        </div>
+    )
+}
+
+function ShieldScan() {
+    return (
+        <div className="relative w-32 h-32 flex items-center justify-center">
+            <Shield className="w-16 h-16 text-amber-500/20" />
+
+            <div className="absolute inset-0 flex items-center justify-center">
+                <motion.div
+                    className="absolute w-20 h-20 rounded-full border border-amber-500/50"
+                    animate={{ scale: [1, 1.5], opacity: [0.8, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                />
+                <motion.div
+                    className="absolute w-20 h-20 rounded-full border border-amber-500/30"
+                    animate={{ scale: [1, 1.8], opacity: [0.6, 0] }}
+                    transition={{ duration: 2, delay: 0.5, repeat: Infinity }}
+                />
+            </div>
+
+            <Shield className="absolute w-16 h-16 text-amber-500 drop-shadow-[0_0_15px_rgba(245,158,11,0.3)]" />
+        </div>
+    )
 }

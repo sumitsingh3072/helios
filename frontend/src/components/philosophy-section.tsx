@@ -68,7 +68,7 @@ export default function PhilosophySection() {
                 <div className="flex justify-center mt-12 mb-8">
                     <Link href="/auth/login">
                         <Button className="rounded-full h-16 px-12 bg-black text-white text-lg tracking-widest uppercase hover:bg-black">
-                            0 | ? | 0
+                            $ | <span className="text-[#FFD600]">$</span> | $
                             {/* <ArrowUpRight className="ml-2 h-5 w-5" /> */}
                         </Button>
                     </Link>

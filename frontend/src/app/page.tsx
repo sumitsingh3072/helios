@@ -6,6 +6,7 @@ import ProjectShowcase from "@/components/project-showcase";
 import AwardsSection from "@/components/awards-section";
 import FeaturesSection from "@/components/features-section";
 import ClientsSection from "@/components/clients-section";
+import CoinTossSection from "@/components/coin-toss-section";
 import PhilosophySection from "@/components/philosophy-section";
 import HeliosVisionSection from "@/components/helios-vision-section";
 import Footer from "@/components/footer";
@@ -51,6 +52,8 @@ export default function Home() {
         <FeaturesSection />
 
         <ClientsSection />
+
+        <CoinTossSection />
 
         <PhilosophySection />
 
