@@ -1,21 +1,38 @@
-# Core Framework
-fastapi==0.109.2
-uvicorn[standard]==0.27.1
-pydantic-settings==2.1.0
+# fastapi
+# uvicorn[standard]
+# gunicorn
+# openai
+# langchain
+# transformers
+# torch
+# pytesseract
+# spacy
+# genai
+# pillow
+# sqlalchemy
+# langchain_google_genai
+# psycopg2-binary  # For PostgreSQL
+# pymongo          # For MongoDB
+# python-jose[cryptography]
+# passlib[bcrypt]
+# python-multipart
+# python-dotenv
+# requests
 
-sqlalchemy==2.0.27
-asyncpg==0.29.0
-alembic==1.13.1  # For DB Migrations
-
-# Authentication (The "Better Auth" Layer)
-fastapi-users[sqlalchemy]==13.0.0
-pyjwt[crypto]==2.8.0
-passlib[bcrypt]==1.7.4
-python-multipart==0.0.9  # For OAuth2 form handling
-
-# HTTP & Crypto (For Setu API)
-httpx==0.26.0
-cryptography==42.0.2
-
-# Utilities
+fastapi==0.111.1
+uvicorn==0.30.3
+gunicorn==22.0.0
+sqlalchemy==2.0.31
+psycopg2-binary==2.9.9
+python-jose[cryptography]==3.3.0
+argon2-cffi==23.1.0
+langchain==0.2.11
+langchain-google-genai==1.0.7
+pytesseract==0.3.10
+pillow==10.4.0
+pydantic==2.8.2
+pydantic-settings==2.3.4
 python-dotenv==1.0.1
+requests==2.32.3
+passlib==1.7.4
+google-genai==1.44.0
