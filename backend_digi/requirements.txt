@@ -1,0 +1,38 @@
+# fastapi
+# uvicorn[standard]
+# gunicorn
+# openai
+# langchain
+# transformers
+# torch
+# pytesseract
+# spacy
+# genai
+# pillow
+# sqlalchemy
+# langchain_google_genai
+# psycopg2-binary  # For PostgreSQL
+# pymongo          # For MongoDB
+# python-jose[cryptography]
+# passlib[bcrypt]
+# python-multipart
+# python-dotenv
+# requests
+
+fastapi==0.111.1
+uvicorn==0.30.3
+gunicorn==22.0.0
+sqlalchemy==2.0.31
+psycopg2-binary==2.9.9
+python-jose[cryptography]==3.3.0
+argon2-cffi==23.1.0
+langchain==0.2.11
+langchain-google-genai==1.0.7
+pytesseract==0.3.10
+pillow==10.4.0
+pydantic==2.8.2
+pydantic-settings==2.3.4
+python-dotenv==1.0.1
+requests==2.32.3
+passlib==1.7.4
+google-genai==1.44.0
