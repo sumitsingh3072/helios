@@ -1,12 +1,63 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Text, Float, Environment } from "@react-three/drei";
 import { useRef, Suspense } from "react";
 import * as THREE from "three";
-import { PiggyBank, Coins, Banknote } from 'lucide-react';
 
-// Passed down ref to access the DOM section
+// Letter H component made with geometry - Bold & Stylish
+function LetterH({ position, rotation }: { position: [number, number, number], rotation: [number, number, number] }) {
+    const goldColor = "#FFD700";
+    const darkGold = "#DAA520";
+
+    return (
+        <group position={position} rotation={rotation} scale={0.55}>
+            {/* Left vertical bar of H - Bold */}
+            <mesh position={[-0.6, 0, 0]}>
+                <boxGeometry args={[0.35, 2.4, 0.15]} />
+                <meshStandardMaterial color={goldColor} metalness={0.95} roughness={0.08} />
+            </mesh>
+
+            {/* Right vertical bar of H - Bold */}
+            <mesh position={[0.6, 0, 0]}>
+                <boxGeometry args={[0.35, 2.4, 0.15]} />
+                <meshStandardMaterial color={goldColor} metalness={0.95} roughness={0.08} />
+            </mesh>
+
+            {/* Horizontal bar of H - Bold */}
+            <mesh position={[0, 0, 0]}>
+                <boxGeometry args={[1.55, 0.4, 0.15]} />
+                <meshStandardMaterial color={goldColor} metalness={0.95} roughness={0.08} />
+            </mesh>
+
+            {/* Top serif - Left */}
+            <mesh position={[-0.6, 1.25, 0]}>
+                <boxGeometry args={[0.55, 0.12, 0.12]} />
+                <meshStandardMaterial color={darkGold} metalness={0.9} roughness={0.1} />
+            </mesh>
+
+            {/* Top serif - Right */}
+            <mesh position={[0.6, 1.25, 0]}>
+                <boxGeometry args={[0.55, 0.12, 0.12]} />
+                <meshStandardMaterial color={darkGold} metalness={0.9} roughness={0.1} />
+            </mesh>
+
+            {/* Bottom serif - Left */}
+            <mesh position={[-0.6, -1.25, 0]}>
+                <boxGeometry args={[0.55, 0.12, 0.12]} />
+                <meshStandardMaterial color={darkGold} metalness={0.9} roughness={0.1} />
+            </mesh>
+
+            {/* Bottom serif - Right */}
+            <mesh position={[0.6, -1.25, 0]}>
+                <boxGeometry args={[0.55, 0.12, 0.12]} />
+                <meshStandardMaterial color={darkGold} metalness={0.9} roughness={0.1} />
+            </mesh>
+        </group>
+    );
+}
+
+
+// Coin component with scroll-based animation
 function Coin({ sectionRef }: { sectionRef: React.RefObject<HTMLElement | null> }) {
     const groupRef = useRef<THREE.Group>(null);
     const scrollProgress = useRef(0);
@@ -25,117 +76,95 @@ function Coin({ sectionRef }: { sectionRef: React.RefObject<HTMLElement | null> 
         scrollProgress.current = THREE.MathUtils.lerp(scrollProgress.current, rawProgress, delta * 5);
         const p = scrollProgress.current;
 
-        // --- ANIMATION TIMELINE ---
-        // 0.0 -> 0.2: Entrance (Right Side -> Center) 
-        // 0.2 -> 1.0: The Long Roll (Center Top -> Center Bottom)
-        // We stretch it to 1.0 to eliminate the "gap" at the end where nothing happens.
-
-        // X Position: Start at Right (1.5) -> Move to Center (0) by p=0.2
-        let targetX = 1.5;
+        // X Position: Start at center-right (0.8) -> Move to Center (0) by p=0.2
+        let targetX = 0.8;
         if (p < 0.2) {
             const t = p / 0.2;
-            targetX = THREE.MathUtils.lerp(1.5, 0, t);
+            targetX = THREE.MathUtils.lerp(0.8, 0, t);
         } else {
             targetX = 0;
         }
 
-        // Y Position: 
-        // 0..0.2: Stable at top (1.0)
-        // 0.2..1.0: Roll all the way down to just off screen (-3.5)
-        let targetY = 1.0;
+        // Y Position: Stable at center-top (0.5), roll down to bottom (-1.0)
+        let targetY = 0.5;
         if (p < 0.2) {
-            targetY = 1.0;
+            targetY = 0.5;
         } else {
-            // From 0.2 to 1.0
             const t = (p - 0.2) / 0.8;
-            targetY = THREE.MathUtils.lerp(1.0, -3.5, t);
+            targetY = THREE.MathUtils.lerp(0.5, -1.0, t);
         }
 
         // Apply Position
         groupRef.current.position.x = targetX;
         groupRef.current.position.y = targetY;
 
-        // Rotations - SLOWER per request
-        // Reduced multipliers significantly
-
-        // X Rotation (Tumble): 
-        groupRef.current.rotation.x = p * Math.PI * 5; // Was 12
-
-        // Z Rotation (Spin): 
-        groupRef.current.rotation.z = p * Math.PI * 2; // Was 4
-
-        // Y Rotation (Face direction): 
+        // Rotations
+        groupRef.current.rotation.x = p * Math.PI * 5;
+        groupRef.current.rotation.z = p * Math.PI * 2;
         groupRef.current.rotation.y = Math.sin(p * Math.PI) * 0.3;
-
     });
 
-    const coinColor = "#F4D03F";
+    const coinColor = "#1a1a1a"; // Black
+    const edgeColor = "#2a2a2a"; // Slightly lighter black for edges
+    const goldColor = "#FFD700"; // Gold
 
     return (
         <group
             ref={groupRef}
             rotation={[Math.PI / 2, 0, 0]}
-            scale={0.4} // Reduced size per request
+            scale={0.5}
         >
-            {/* Main Coin Cylinder */}
+            {/* Main Coin Cylinder - Black */}
             <mesh castShadow receiveShadow>
-                <cylinderGeometry args={[2.5, 2.5, 0.25, 64]} />
+                <cylinderGeometry args={[2.5, 2.5, 0.3, 64]} />
                 <meshStandardMaterial
                     color={coinColor}
-                    metalness={0.95}
-                    roughness={0.1}
-                    envMapIntensity={1.5}
+                    metalness={0.85}
+                    roughness={0.2}
                 />
             </mesh>
 
-            {/* Edge Ridge - Front */}
-            <mesh position={[0, 0.13, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[2.5, 0.1, 16, 64]} />
-                <meshStandardMaterial color={coinColor} metalness={0.95} roughness={0.1} />
+            {/* Edge Ridge - Front - Gold accent */}
+            <mesh position={[0, 0.16, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[2.5, 0.08, 16, 64]} />
+                <meshStandardMaterial color={goldColor} metalness={0.95} roughness={0.1} />
             </mesh>
 
-            {/* Edge Ridge - Back */}
-            <mesh position={[0, -0.13, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[2.5, 0.1, 16, 64]} />
-                <meshStandardMaterial color={coinColor} metalness={0.95} roughness={0.1} />
+            {/* Edge Ridge - Back - Gold accent */}
+            <mesh position={[0, -0.16, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[2.5, 0.08, 16, 64]} />
+                <meshStandardMaterial color={goldColor} metalness={0.95} roughness={0.1} />
             </mesh>
 
-            {/* Face Content: HEADS ($) */}
-            <group position={[0, 0.13, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-                {/* Inner Circle Decoration */}
-                <mesh position={[0, 0, -0.01]}>
-                    <ringGeometry args={[0, 2.4, 64]} />
-                    <meshStandardMaterial color={coinColor} metalness={0.8} roughness={0.3} />
-                </mesh>
-                <Text
-                    position={[0, 0, 0.02]}
-                    fontSize={1.8}
-                    color="#8B6914"
-                    anchorX="center"
-                    anchorY="middle"
-                >
-                    $
-                </Text>
-            </group>
+            {/* Face - Front */}
+            <mesh position={[0, 0.16, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                <circleGeometry args={[2.45, 64]} />
+                <meshStandardMaterial color={coinColor} metalness={0.85} roughness={0.2} />
+            </mesh>
 
-            {/* Face Content: TAILS (FINANCE) */}
-            <group position={[0, -0.13, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                <mesh position={[0, 0, -0.01]}>
-                    <ringGeometry args={[0, 2.4, 64]} />
-                    <meshStandardMaterial color={coinColor} metalness={0.8} roughness={0.3} />
-                </mesh>
-                <Text
-                    position={[0, 0, 0.02]}
-                    fontSize={0.6}
-                    color="#8B6914"
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={0.02}
-                    outlineColor="#F4D03F"
-                >
-                    HELIOS
-                </Text>
-            </group>
+            {/* Gold ring decoration - Front */}
+            <mesh position={[0, 0.17, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                <ringGeometry args={[2.0, 2.2, 64]} />
+                <meshStandardMaterial color={goldColor} metalness={0.95} roughness={0.1} />
+            </mesh>
+
+            {/* Dollar Sign - Front */}
+            <LetterH position={[0, 0.2, 0]} rotation={[-Math.PI / 2, 0, 0]} />
+
+            {/* Face - Back */}
+            <mesh position={[0, -0.16, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <circleGeometry args={[2.45, 64]} />
+                <meshStandardMaterial color={coinColor} metalness={0.85} roughness={0.2} />
+            </mesh>
+
+            {/* Gold ring decoration - Back */}
+            <mesh position={[0, -0.17, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <ringGeometry args={[2.0, 2.2, 64]} />
+                <meshStandardMaterial color={goldColor} metalness={0.95} roughness={0.1} />
+            </mesh>
+
+            {/* Dollar Sign - Back */}
+            <LetterH position={[0, -0.2, 0]} rotation={[Math.PI / 2, 0, 0]} />
         </group>
     );
 }
@@ -143,21 +172,14 @@ function Coin({ sectionRef }: { sectionRef: React.RefObject<HTMLElement | null> 
 function Scene({ sectionRef }: { sectionRef: React.RefObject<HTMLElement | null> }) {
     return (
         <>
-            <ambientLight intensity={0.7} />
-            <directionalLight position={[5, 10, 5]} intensity={2} castShadow />
-            <pointLight position={[-10, -5, -10]} intensity={1} color="white" />
-            <Environment preset="city" />
-
-            <Float
-                speed={2}
-                rotationIntensity={0.1}
-                floatIntensity={0.2}
-                floatingRange={[-0.1, 0.1]}
-            >
-                <Coin sectionRef={sectionRef} />
-            </Float>
+            <ambientLight intensity={0.4} />
+            <directionalLight position={[5, 10, 7]} intensity={2} color="#ffffff" />
+            <directionalLight position={[-5, -5, 5]} intensity={0.8} color="#fffacd" />
+            <pointLight position={[0, 5, 5]} intensity={1} color="#fff8dc" />
+            <spotLight position={[3, 3, 5]} intensity={1.5} angle={0.5} penumbra={0.5} color="#ffd700" />
+            <Coin sectionRef={sectionRef} />
         </>
-    )
+    );
 }
 
 export default function CoinTossSection() {
@@ -165,22 +187,18 @@ export default function CoinTossSection() {
 
     return (
         <section ref={sectionRef} className="w-full h-[150vh] bg-[#F3F0E7] relative z-10 px-0">
-            {/* Height set to 150vh */}
-
             <div className="sticky top-0 w-full h-screen overflow-hidden z-30">
 
                 {/* Gradient Overlay (Background) */}
                 <div className="absolute inset-0 bg-gradient-to-r from-[#F3F0E7]/80 via-transparent to-transparent z-0 pointer-events-none w-full" />
 
-                {/* 3D Scene (Foreground) - High Z-index to stand out over text backgrounds */}
+                {/* 3D Scene */}
                 <div className="absolute inset-0 z-30 h-full w-full pointer-events-none">
-                    <Suspense fallback={null}>
+                    <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-black">Loading 3D...</div>}>
                         <Canvas
-                            shadows
-                            dpr={[1, 2]}
                             camera={{ position: [0, 0, 5], fov: 35 }}
-                            className="w-full h-full"
-                            style={{ background: 'transparent' }}
+                            style={{ width: '100%', height: '100%', background: 'transparent' }}
+                            gl={{ alpha: true, antialias: true }}
                         >
                             <Scene sectionRef={sectionRef} />
                         </Canvas>
@@ -188,9 +206,6 @@ export default function CoinTossSection() {
                 </div>
 
             </div>
-            {/* --- Text Content (Scrolling Naturally) ---
-                Placed absolutely relative to the section (h-[150vh]), so they will scroll up as the user scrolls down.
-            */}
 
             {/* Text 1: Near top */}
             <div className="absolute top-[20vh] left-[10vw] max-w-xs md:max-w-md z-20 pointer-events-none">
@@ -214,9 +229,7 @@ export default function CoinTossSection() {
 
             {/* Text 3: Near bottom with Mesh Background */}
             <div className="absolute top-[120vh] left-0 w-full flex items-center justify-start pl-[10vw] gap-8 z-20 pointer-events-auto bg-black p-10 overflow-hidden">
-                {/* Mesh Background Pattern */}
                 <div className="absolute inset-0 z-0 opacity-20 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px]" />
-
                 <div className="relative z-10 max-w-xs md:max-w-md">
                     <h2 className="text-5xl md:text-7xl font-serif italic mb-4 text-white">
                         Your<br />Turn.
