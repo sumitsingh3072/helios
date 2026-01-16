@@ -2,84 +2,117 @@
 
 import { GlassCard } from "@/components/dashboard/glass-card";
 import { StakingCard } from "@/components/dashboard/staking-card";
-import { ArrowUpRight, Wallet, Activity, Zap, Layers, RefreshCw, BarChart } from "lucide-react";
+import { ArrowUpRight, Wallet, Activity, Zap, Layers, RefreshCw, BarChart, AlertCircle, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useDashboard } from "@/hooks/useDashboard";
+import { formatDistanceToNow } from "date-fns";
 
-const stakingData = [
-    { name: "Mon", value: 3000 },
-    { name: "Tue", value: 3500 },
-    { name: "Wed", value: 3200 },
-    { name: "Thu", value: 4000 },
-    { name: "Fri", value: 3800 },
-    { name: "Sat", value: 5000 },
-    { name: "Sun", value: 5500 },
-];
-
+/**
+ * Dashboard Overview Page - Orchestrator
+ * Uses useDashboard hook for data, only responsible for layout
+ */
 export default function DashboardPage() {
+    const { stats, stakingAssets, activities, isLoading, error, refresh } = useDashboard();
+
+    // Get current date formatted
+    const currentDate = new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] text-white">
+                <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
+                <h2 className="text-xl font-bold mb-2">Failed to load dashboard</h2>
+                <p className="text-gray-400 mb-4">{error}</p>
+                <Button onClick={refresh} className="bg-blue-600 hover:bg-blue-500">
+                    <RefreshCw className="w-4 h-4 mr-2" /> Try Again
+                </Button>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8 text-white min-h-screen pb-10">
             {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-serif font-bold tracking-tight text-white">Overview</h1>
-                    <p className="text-gray-400 text-sm mt-1">Wednesday, October 24 • <span className="text-blue-400">System Optimal</span></p>
+                    <h1 className="text-2xl md:text-3xl font-serif font-bold tracking-tight text-white">Overview</h1>
+                    <p className="text-gray-400 text-sm mt-1">
+                        {currentDate} • <span className="text-blue-400">System Optimal</span>
+                    </p>
                 </div>
                 <div className="flex gap-3">
-                    <Button variant="outline" className="border-white/10 hover:bg-white/5 text-gray-300 font-medium rounded-full px-6">Withdraw</Button>
-                    <Button className="bg-white text-black hover:bg-gray-200 px-6 rounded-full font-bold shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">Deposit Assets</Button>
+                    <Button
+                        variant="outline"
+                        className="border-white/10 hover:bg-white/5 text-gray-300 font-medium rounded-full px-4 md:px-6"
+                        onClick={refresh}
+                        disabled={isLoading}
+                    >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                        <span className="hidden sm:inline">Refresh</span>
+                    </Button>
+                    <Button className="bg-white text-black hover:bg-gray-200 px-4 md:px-6 rounded-full font-bold shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
+                        Deposit Assets
+                    </Button>
                 </div>
             </div>
 
             {/* Top Row: Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StakingCard
-                    symbol="ETH"
-                    name="Etherium"
-                    apy="4.2%"
-                    tvl="$8,242"
-                    chartColor="#3B82F6"
-                    data={stakingData}
-                    icon={<Layers className="w-5 h-5 text-blue-500" />}
-                />
-                <StakingCard
-                    symbol="SOL"
-                    name="Solana"
-                    apy="7.8%"
-                    tvl="$4,102"
-                    chartColor="#60A5FA"
-                    data={stakingData}
-                    icon={<Zap className="w-5 h-5 text-blue-400" />}
-                />
-                <StakingCard
-                    symbol="USDC"
-                    name="USD Coin"
-                    apy="5.1%"
-                    tvl="$12,093"
-                    chartColor="#FFFFFF"
-                    data={stakingData}
-                    icon={<RefreshCw className="w-5 h-5 text-white" />}
-                />
-
-                {/* Promotional / Action Card */}
-                <GlassCard variant="blue" className="flex flex-col justify-between p-6 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-50"><Activity className="w-12 h-12 text-blue-500/20" /></div>
-                    <div>
-                        <div className="inline-flex items-center gap-2 px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 mb-3">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                            <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">New Pool</span>
-                        </div>
-                        <h3 className="text-xl font-bold mb-1">Liquid Staking</h3>
-                        <p className="text-sm text-gray-400">Earn 12% APY on your idle assets.</p>
-                    </div>
-                    <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white border-0 font-bold rounded-xl shadow-lg shadow-blue-600/20">
-                        Start Staking <ArrowUpRight className="ml-2 w-4 h-4" />
-                    </Button>
-                </GlassCard>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {isLoading ? (
+                    // Loading skeletons
+                    [...Array(4)].map((_, i) => (
+                        <GlassCard key={i} className="p-6 animate-pulse">
+                            <div className="h-4 bg-white/10 rounded w-1/2 mb-4" />
+                            <div className="h-8 bg-white/10 rounded w-3/4 mb-2" />
+                            <div className="h-20 bg-white/5 rounded" />
+                        </GlassCard>
+                    ))
+                ) : (
+                    <>
+                        {stakingAssets.map((asset, i) => (
+                            <StakingCard
+                                key={asset.id}
+                                symbol={asset.symbol}
+                                name={asset.name}
+                                apy={asset.apy}
+                                tvl={asset.tvl}
+                                chartColor={asset.chartColor}
+                                data={asset.data}
+                                icon={
+                                    i === 0 ? <Layers className="w-5 h-5 text-blue-500" /> :
+                                        i === 1 ? <Zap className="w-5 h-5 text-blue-400" /> :
+                                            <RefreshCw className="w-5 h-5 text-white" />
+                                }
+                            />
+                        ))}
+                        {/* Promotional Card */}
+                        <GlassCard variant="blue" className="flex flex-col justify-between p-6 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4 opacity-50">
+                                <Activity className="w-12 h-12 text-blue-500/20" />
+                            </div>
+                            <div>
+                                <div className="inline-flex items-center gap-2 px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 mb-3">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                                    <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">New Pool</span>
+                                </div>
+                                <h3 className="text-xl font-bold mb-1">Liquid Staking</h3>
+                                <p className="text-sm text-gray-400">Earn 12% APY on your idle assets.</p>
+                            </div>
+                            <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white border-0 font-bold rounded-xl shadow-lg shadow-blue-600/20">
+                                Start Staking <ArrowUpRight className="ml-2 w-4 h-4" />
+                            </Button>
+                        </GlassCard>
+                    </>
+                )}
             </div>
 
             {/* Main Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Active Staking Large Card */}
+                {/* Balance Card */}
                 <GlassCard variant="metallic" className="lg:col-span-2 p-0 overflow-hidden min-h-[400px] flex flex-col">
                     <div className="p-6 border-b border-white/5 flex justify-between items-center">
                         <div className="flex items-center gap-3">
@@ -97,50 +130,53 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    <div className="flex-1 p-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-center relative">
-                        {/* Gradients */}
+                    <div className="flex-1 p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-center relative">
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-500/10 blur-[80px] pointer-events-none" />
 
-                        <div>
-                            <p className="text-sm text-gray-400 mb-1">Total Balance</p>
-                            <h2 className="text-5xl font-mono font-bold text-white tracking-tight">$24,093.82</h2>
-                            <div className="flex items-center gap-2 mt-4 text-green-400 bg-green-500/10 w-fit px-2 py-1 rounded">
-                                <TrendingUp className="w-4 h-4" />
-                                <span className="text-sm font-bold">+12.4%</span>
-                            </div>
-                        </div>
+                        {isLoading ? (
+                            <>
+                                <div className="animate-pulse space-y-4">
+                                    <div className="h-4 bg-white/10 rounded w-24" />
+                                    <div className="h-12 bg-white/10 rounded w-48" />
+                                    <div className="h-6 bg-white/10 rounded w-20" />
+                                </div>
+                                <div className="space-y-4 animate-pulse">
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} className="h-20 bg-white/5 rounded-xl" />
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div>
+                                    <p className="text-sm text-gray-400 mb-1">Total Balance</p>
+                                    <h2 className="text-4xl md:text-5xl font-mono font-bold text-white tracking-tight">
+                                        ${stats?.totalBalance.toLocaleString()}
+                                    </h2>
+                                    <div className="flex items-center gap-2 mt-4 text-green-400 bg-green-500/10 w-fit px-2 py-1 rounded">
+                                        <TrendingUp className="w-4 h-4" />
+                                        <span className="text-sm font-bold">+{stats?.balanceChange}%</span>
+                                    </div>
+                                </div>
 
-                        <div className="space-y-4">
-                            <div className="p-4 rounded-xl bg-white/5 border border-white/5 backdrop-blur-sm hover:border-blue-500/30 transition-colors cursor-pointer group">
-                                <div className="flex justify-between mb-2">
-                                    <span className="text-sm text-gray-400 font-medium">Etherium</span>
-                                    <span className="text-sm text-white font-bold group-hover:text-blue-400 transition-colors">64%</span>
+                                <div className="space-y-4">
+                                    {stakingAssets.map((asset) => (
+                                        <div key={asset.id} className="p-4 rounded-xl bg-white/5 border border-white/5 backdrop-blur-sm hover:border-blue-500/30 transition-colors cursor-pointer group">
+                                            <div className="flex justify-between mb-2">
+                                                <span className="text-sm text-gray-400 font-medium">{asset.name}</span>
+                                                <span className="text-sm text-white font-bold group-hover:text-blue-400 transition-colors">{asset.allocation}%</span>
+                                            </div>
+                                            <div className="h-1.5 w-full bg-black/50 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-blue-600 shadow-[0_0_10px_#2563EB] transition-all duration-500"
+                                                    style={{ width: `${asset.allocation}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                <div className="h-1.5 w-full bg-black/50 rounded-full overflow-hidden">
-                                    <div className="h-full w-[64%] bg-blue-600 shadow-[0_0_10px_#2563EB]" />
-                                </div>
-                            </div>
-
-                            <div className="p-4 rounded-xl bg-white/5 border border-white/5 backdrop-blur-sm hover:border-blue-500/30 transition-colors cursor-pointer group">
-                                <div className="flex justify-between mb-2">
-                                    <span className="text-sm text-gray-400 font-medium">Solana</span>
-                                    <span className="text-sm text-white font-bold group-hover:text-blue-400 transition-colors">28%</span>
-                                </div>
-                                <div className="h-1.5 w-full bg-black/50 rounded-full overflow-hidden">
-                                    <div className="h-full w-[28%] bg-blue-400" />
-                                </div>
-                            </div>
-
-                            <div className="p-4 rounded-xl bg-white/5 border border-white/5 backdrop-blur-sm hover:border-blue-500/30 transition-colors cursor-pointer group">
-                                <div className="flex justify-between mb-2">
-                                    <span className="text-sm text-gray-400 font-medium">USDC</span>
-                                    <span className="text-sm text-white font-bold group-hover:text-blue-400 transition-colors">8%</span>
-                                </div>
-                                <div className="h-1.5 w-full bg-black/50 rounded-full overflow-hidden">
-                                    <div className="h-full w-[8%] bg-white/50" />
-                                </div>
-                            </div>
-                        </div>
+                            </>
+                        )}
                     </div>
                 </GlassCard>
 
@@ -150,44 +186,50 @@ export default function DashboardPage() {
                         <h3 className="font-bold">Recent Activity</h3>
                     </div>
                     <div className="flex-1 overflow-auto p-4 space-y-2">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:border-blue-500/50 transition-colors">
-                                        <Wallet className="w-4 h-4 text-blue-400" />
+                        {isLoading ? (
+                            [...Array(5)].map((_, i) => (
+                                <div key={i} className="flex items-center justify-between p-3 animate-pulse">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-white/10" />
+                                        <div className="space-y-2">
+                                            <div className="h-4 bg-white/10 rounded w-24" />
+                                            <div className="h-3 bg-white/5 rounded w-16" />
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-gray-200">Stake Deposit</p>
-                                        <p className="text-xs text-gray-500">10 mins ago</p>
+                                    <div className="text-right space-y-2">
+                                        <div className="h-4 bg-white/10 rounded w-16 ml-auto" />
+                                        <div className="h-3 bg-white/5 rounded w-12 ml-auto" />
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-sm font-mono font-bold text-white">+2.5 ETH</p>
-                                    <p className="text-xs text-gray-500">Completed</p>
+                            ))
+                        ) : (
+                            activities.map((activity) => (
+                                <div key={activity.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:border-blue-500/50 transition-colors">
+                                            <Wallet className="w-4 h-4 text-blue-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-gray-200">{activity.description}</p>
+                                            <p className="text-xs text-gray-500">
+                                                {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-mono font-bold text-white">{activity.amount}</p>
+                                        <p className={`text-xs capitalize ${activity.status === 'completed' ? 'text-green-400' :
+                                                activity.status === 'pending' ? 'text-yellow-400' : 'text-gray-500'
+                                            }`}>
+                                            {activity.status}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
                 </GlassCard>
             </div>
         </div>
     );
-}
-
-function TrendingUp({ className }: { className?: string }) {
-    return (
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={className}
-        >
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-            <polyline points="17 6 23 6 23 12" />
-        </svg>
-    )
 }
