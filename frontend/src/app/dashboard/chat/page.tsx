@@ -35,7 +35,7 @@ export default function ChatPage() {
 
     return (
         <ChatErrorBoundary>
-            <div className="h-[calc(100vh-5rem)] flex flex-col text-white relative overflow-hidden">
+            <div className="h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)] flex flex-col text-white relative overflow-hidden">
                 {/* Background Map */}
                 <div className="absolute inset-0 z-0">
                     <Image

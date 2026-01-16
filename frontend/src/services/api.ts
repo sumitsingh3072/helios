@@ -1,11 +1,53 @@
-// Basic types for our domain
+// ============================================================================
+// API Service - Frontend to Backend Integration
+// ============================================================================
+// Base URL for the backend API
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_V1 = `${API_BASE_URL}/api/v1`;
+
+// ============================================================================
+// Types matching backend schemas
+// ============================================================================
+
+// User types (matching backend/app/schemas/user.py)
 export interface User {
-    id: string;
-    name: string;
+    id: number;
     email: string;
-    plan: 'free' | 'pro';
+    full_name: string | null;
+    phone_number: string | null;
+    is_active: boolean;
+    documents: Document[];
+    chat_messages: ChatMessageDB[];
+    transactions: TransactionBackend[];
 }
 
+export interface UserCreate {
+    email: string;
+    full_name?: string;
+    phone_number: string;
+    password: string;
+}
+
+// Document type (matching backend/app/schemas/document.py)
+export interface Document {
+    id: number;
+    filename: string;
+    content_type: string;
+    owner_id: number;
+}
+
+// Transaction types (matching backend/app/schemas/transactions.py)
+export interface TransactionBackend {
+    id: number;
+    description: string | null;
+    amount: number;
+    category: string;
+    vendor_name: string | null;
+    owner_id: number;
+    transaction_date: string;
+}
+
+// Frontend transaction type for UI display
 export interface Transaction {
     id: string;
     date: string;
@@ -15,6 +57,26 @@ export interface Transaction {
     status: 'completed' | 'processing' | 'failed';
 }
 
+// Chat types (matching backend/app/schemas/chat.py)
+export interface ChatMessageCreate {
+    message: string;
+    language?: 'English' | 'Hindi' | 'Bengali' | 'Tamil' | 'Telugu' | 'Marathi' | 'Gujarati' | 'Kannada' | 'Malayalam' | 'Odia' | 'Punjabi' | 'Assamese' | 'Bhojpuri';
+}
+
+export interface ChatMessageResponse {
+    message: string;
+    response: string;
+}
+
+export interface ChatMessageDB {
+    id: number;
+    message: string;
+    is_from_user: boolean;
+    owner_id: number;
+    created_at: string;
+}
+
+// Frontend chat message type for UI display
 export interface ChatMessage {
     id: string;
     role: 'user' | 'assistant';
@@ -26,7 +88,13 @@ export interface ChatMessage {
     };
 }
 
-// Dashboard types
+// Dashboard types (matching backend/app/schemas/dashboard.py)
+export interface DashboardSummary {
+    total_spending: number;
+    spending_by_category: Record<string, number>;
+}
+
+// Frontend dashboard stats for UI
 export interface DashboardStats {
     totalBalance: number;
     balanceChange: number;
@@ -35,6 +103,13 @@ export interface DashboardStats {
     activeSips: number;
 }
 
+// Token type (matching backend/app/schemas/token.py)
+export interface Token {
+    access_token: string;
+    token_type: string;
+}
+
+// Other frontend types
 export interface StakingAsset {
     id: string;
     symbol: string;
@@ -79,24 +154,63 @@ export interface TransactionSummary {
     netBalance: number;
 }
 
-// Mock data
-const MOCK_USER: User = {
-    id: 'u1',
-    name: 'Somil Gupta',
-    email: 'somil@example.com',
-    plan: 'pro'
+// ============================================================================
+// Token Management
+// ============================================================================
+const TOKEN_KEY = 'helios_auth_token';
+
+export const tokenManager = {
+    getToken: (): string | null => {
+        if (typeof window === 'undefined') return null;
+        return localStorage.getItem(TOKEN_KEY);
+    },
+    setToken: (token: string): void => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(TOKEN_KEY, token);
+        }
+    },
+    removeToken: (): void => {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem(TOKEN_KEY);
+        }
+    },
+    getAuthHeaders: (): HeadersInit => {
+        const token = tokenManager.getToken();
+        return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
 };
 
-const MOCK_TRANSACTIONS: Transaction[] = [
-    { id: 't1', date: '2024-03-01', amount: -340, description: 'Uber Ride', category: 'Transport', status: 'completed' },
-    { id: 't2', date: '2024-03-01', amount: -450, description: 'Starbucks', category: 'Food & Drink', status: 'completed' },
-    { id: 't3', date: '2024-02-28', amount: 85000, description: 'Salary', category: 'Income', status: 'completed' },
-    { id: 't4', date: '2024-02-27', amount: -1200, description: 'Amazon Purchase', category: 'Shopping', status: 'completed' },
-    { id: 't5', date: '2024-02-26', amount: -500, description: 'Electricity Bill', category: 'Utilities', status: 'processing' },
-    { id: 't6', date: '2024-02-25', amount: 5000, description: 'Freelance Payment', category: 'Income', status: 'completed' },
-    { id: 't7', date: '2024-02-24', amount: -800, description: 'Restaurant', category: 'Food & Drink', status: 'completed' },
-];
+// ============================================================================
+// API Error Handling
+// ============================================================================
+export class ApiError extends Error {
+    constructor(
+        message: string,
+        public status: number,
+        public details?: unknown
+    ) {
+        super(message);
+        this.name = 'ApiError';
+    }
+}
 
+async function handleResponse<T>(response: Response): Promise<T> {
+    if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+            const errorData = await response.json();
+            errorMessage = errorData.detail || errorData.message || errorMessage;
+        } catch {
+            // If we can't parse the error, use the default message
+        }
+        throw new ApiError(errorMessage, response.status);
+    }
+    return response.json();
+}
+
+// ============================================================================
+// Mock Data (fallback when backend is not available)
+// ============================================================================
 const MOCK_STAKING_DATA = [
     { name: "Mon", value: 3000 },
     { name: "Tue", value: 3500 },
@@ -146,218 +260,270 @@ const MOCK_CHART_DATA: ChartDataPoint[] = [
     { name: 'Jul', uv: 3490, pv: 4300 },
 ];
 
-const MOCK_CHAT_MESSAGES: ChatMessage[] = [
-    {
-        id: 'm1',
-        role: 'assistant',
-        content: "Hello! I'm Helios, your AI financial intelligence assistant. I've been analyzing your portfolio and have some insights to share. Would you like me to break down your staking rewards or analyze market trends?",
-        timestamp: new Date(Date.now() - 60000),
-        richContent: {
-            type: 'stats',
-            data: {
-                portfolioChange: '+12.4%',
-                topPerformer: 'ETH',
-                topPerformerChange: '+18.2%'
-            }
-        }
-    },
-    {
-        id: 'm2',
-        role: 'user',
-        content: "Show me my staking rewards breakdown and compare with last month's performance.",
-        timestamp: new Date(Date.now() - 30000),
-    },
-    {
-        id: 'm3',
-        role: 'assistant',
-        content: "Here's your staking rewards breakdown. Your total rewards are $1,318 — up 12.8% from last month ($1,158).",
-        timestamp: new Date(),
-        richContent: {
-            type: 'chart',
-            data: {
-                items: [
-                    { name: 'Ethereum', current: '$842', prev: '$720', change: '+16.9%', percentage: 75 },
-                    { name: 'Solana', current: '$320', prev: '$290', change: '+10.3%', percentage: 45 },
-                    { name: 'USDC', current: '$156', prev: '$148', change: '+5.4%', percentage: 25 },
-                ]
-            }
-        }
-    },
-];
-
-const AI_RESPONSES = [
-    "I've analyzed your request. Based on your portfolio data, I can see some interesting trends. Your overall performance has been positive this quarter.",
-    "Great question! Looking at the market data, I can provide some insights. The current trend suggests cautious optimism.",
-    "I've processed your query. Here's what I found in your financial data - your spending patterns show improvement compared to last month.",
-    "Based on my analysis, I recommend reviewing your asset allocation. Your current portfolio is well-diversified but could benefit from some adjustments.",
-];
-
-/**
- * API Service
- * 
- * This service handles all data fetching. Currently using mock data.
- * When backend is ready, replace simulated delays with actual fetch calls.
- */
+// ============================================================================
+// API Service
+// ============================================================================
 export const api = {
-    auth: {
-        login: async (email: string): Promise<User> => {
-            // await fetch('/api/auth/login', ...);
-            return new Promise((resolve) => setTimeout(() => resolve(MOCK_USER), 1000));
-        },
-        signup: async (data: unknown): Promise<User> => {
-            // await fetch('/api/auth/signup', ...);
-            return new Promise((resolve) => setTimeout(() => resolve(MOCK_USER), 1000));
-        },
-        getUser: async (): Promise<User> => {
-            // await fetch('/api/user/me');
-            return new Promise((resolve) => setTimeout(() => resolve(MOCK_USER), 500));
+    // =========================================================================
+    // Health Check
+    // =========================================================================
+    health: {
+        check: async (): Promise<{ status: string; message: string }> => {
+            const response = await fetch(`${API_V1}/health/`);
+            return handleResponse(response);
         }
     },
 
+    // =========================================================================
+    // Authentication
+    // =========================================================================
+    auth: {
+        /**
+         * Login with email and password
+         * Backend: POST /api/v1/login/token
+         */
+        login: async (email: string, password: string): Promise<Token> => {
+            const formData = new URLSearchParams();
+            formData.append('username', email); // OAuth2 uses 'username' field
+            formData.append('password', password);
+
+            const response = await fetch(`${API_V1}/login/token`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: formData.toString(),
+            });
+
+            const token = await handleResponse<Token>(response);
+            tokenManager.setToken(token.access_token);
+            return token;
+        },
+
+        /**
+         * Register a new user
+         * Backend: POST /api/v1/users/
+         */
+        signup: async (data: UserCreate): Promise<User> => {
+            const response = await fetch(`${API_V1}/users/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+            return handleResponse(response);
+        },
+
+        /**
+         * Get current user details
+         * Backend: GET /api/v1/users/me
+         */
+        getUser: async (): Promise<User> => {
+            const response = await fetch(`${API_V1}/users/me`, {
+                headers: {
+                    ...tokenManager.getAuthHeaders(),
+                },
+            });
+            return handleResponse(response);
+        },
+
+        /**
+         * Logout - clears the stored token
+         */
+        logout: (): void => {
+            tokenManager.removeToken();
+        },
+
+        /**
+         * Check if user is authenticated
+         */
+        isAuthenticated: (): boolean => {
+            return !!tokenManager.getToken();
+        }
+    },
+
+    // =========================================================================
+    // Dashboard
+    // =========================================================================
     dashboard: {
         /**
-         * Get dashboard overview stats
+         * Get dashboard summary
+         * Backend: GET /api/v1/dashboard/summary
          */
-        getStats: async (): Promise<DashboardStats> => {
-            // const response = await fetch('/api/dashboard/stats');
-            // if (!response.ok) throw new Error('Failed to fetch stats');
-            // return response.json();
-
-            return new Promise((resolve) => setTimeout(() => resolve({
-                totalBalance: 24093.82,
-                balanceChange: 12.4,
-                monthlySpend: 45231,
-                investments: 120000,
-                activeSips: 3
-            }), 800));
+        getSummary: async (): Promise<DashboardSummary> => {
+            const response = await fetch(`${API_V1}/dashboard/summary`, {
+                headers: {
+                    ...tokenManager.getAuthHeaders(),
+                },
+            });
+            return handleResponse(response);
         },
 
         /**
-         * Get staking assets data
+         * Get dashboard stats (transforms backend data + adds mock data for UI)
+         */
+        getStats: async (): Promise<DashboardStats> => {
+            try {
+                const summary = await api.dashboard.getSummary();
+                return {
+                    totalBalance: 24093.82, // Would come from a separate endpoint
+                    balanceChange: 12.4,
+                    monthlySpend: Number(summary.total_spending),
+                    investments: 120000,
+                    activeSips: 3
+                };
+            } catch {
+                // Fallback to mock data if backend is not available
+                return {
+                    totalBalance: 24093.82,
+                    balanceChange: 12.4,
+                    monthlySpend: 45231,
+                    investments: 120000,
+                    activeSips: 3
+                };
+            }
+        },
+
+        /**
+         * Get staking assets (mock data - no backend endpoint yet)
          */
         getStakingAssets: async (): Promise<StakingAsset[]> => {
-            // const response = await fetch('/api/dashboard/staking');
-            // if (!response.ok) throw new Error('Failed to fetch staking assets');
-            // return response.json();
-
             return new Promise((resolve) =>
                 setTimeout(() => resolve([...MOCK_STAKING_ASSETS]), 600)
             );
         },
 
         /**
-         * Get recent activities
+         * Get recent activities (mock data - no backend endpoint yet)
          */
         getActivities: async (): Promise<Activity[]> => {
-            // const response = await fetch('/api/dashboard/activities');
-            // if (!response.ok) throw new Error('Failed to fetch activities');
-            // return response.json();
-
             return new Promise((resolve) =>
                 setTimeout(() => resolve([...MOCK_ACTIVITIES]), 700)
             );
         },
 
         /**
-         * Get transactions list
+         * Get user transactions from backend
+         * Transforms backend TransactionBackend to frontend Transaction format
          */
         getTransactions: async (): Promise<Transaction[]> => {
-            // const response = await fetch('/api/transactions');
-            // if (!response.ok) throw new Error('Failed to fetch transactions');
-            // return response.json();
-
-            return new Promise((resolve) =>
-                setTimeout(() => resolve([...MOCK_TRANSACTIONS]), 800)
-            );
+            try {
+                const user = await api.auth.getUser();
+                return user.transactions.map((t): Transaction => ({
+                    id: String(t.id),
+                    date: t.transaction_date,
+                    amount: t.amount,
+                    description: t.description || t.vendor_name || 'Transaction',
+                    category: t.category,
+                    status: 'completed'
+                }));
+            } catch {
+                // Fallback to mock data
+                return [
+                    { id: 't1', date: '2024-03-01', amount: -340, description: 'Uber Ride', category: 'Transport', status: 'completed' },
+                    { id: 't2', date: '2024-03-01', amount: -450, description: 'Starbucks', category: 'Food & Drink', status: 'completed' },
+                    { id: 't3', date: '2024-02-28', amount: 85000, description: 'Salary', category: 'Income', status: 'completed' },
+                ];
+            }
         },
 
         /**
          * Get transaction summary
          */
         getTransactionSummary: async (): Promise<TransactionSummary> => {
-            // const response = await fetch('/api/transactions/summary');
-            // if (!response.ok) throw new Error('Failed to fetch summary');
-            // return response.json();
-
-            const transactions = MOCK_TRANSACTIONS;
+            const transactions = await api.dashboard.getTransactions();
             const totalIncome = transactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
             const totalExpenses = transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-            return new Promise((resolve) => setTimeout(() => resolve({
+            return {
                 totalIncome,
                 totalExpenses,
                 netBalance: totalIncome - totalExpenses
-            }), 500));
+            };
         },
     },
 
+    // =========================================================================
+    // Insights
+    // =========================================================================
     insights: {
         /**
-         * Get network statistics
+         * Get network stats (mock data - no backend endpoint yet)
          */
         getNetworkStats: async (): Promise<NetworkStats> => {
-            // const response = await fetch('/api/insights/network');
-            // if (!response.ok) throw new Error('Failed to fetch network stats');
-            // return response.json();
-
             return new Promise((resolve) =>
                 setTimeout(() => resolve({ ...MOCK_NETWORK_STATS }), 800)
             );
         },
 
         /**
-         * Get chart data for performance graph
+         * Get chart data (mock data - no backend endpoint yet)
          */
         getChartData: async (period: string = '1W'): Promise<ChartDataPoint[]> => {
-            // const response = await fetch(`/api/insights/chart?period=${period}`);
-            // if (!response.ok) throw new Error('Failed to fetch chart data');
-            // return response.json();
-
             return new Promise((resolve) =>
                 setTimeout(() => resolve([...MOCK_CHART_DATA]), 600)
             );
         },
     },
 
+    // =========================================================================
+    // Chat
+    // =========================================================================
     chat: {
         /**
-         * Get chat message history
+         * Get chat message history from user's messages
          */
         getMessages: async (): Promise<ChatMessage[]> => {
-            // const response = await fetch('/api/chat/messages');
-            // if (!response.ok) throw new Error('Failed to fetch messages');
-            // return response.json();
-
-            return new Promise((resolve) =>
-                setTimeout(() => resolve([...MOCK_CHAT_MESSAGES]), 800)
-            );
+            try {
+                const user = await api.auth.getUser();
+                return user.chat_messages.map((msg): ChatMessage => ({
+                    id: String(msg.id),
+                    role: msg.is_from_user ? 'user' : 'assistant',
+                    content: msg.message,
+                    timestamp: new Date(msg.created_at),
+                }));
+            } catch {
+                // Return welcome message if not authenticated
+                return [{
+                    id: 'welcome',
+                    role: 'assistant',
+                    content: "Hello! I'm Helios, your AI financial assistant. Please login to access personalized insights.",
+                    timestamp: new Date(),
+                }];
+            }
         },
 
         /**
          * Send a message and get AI response
+         * Backend: POST /api/v1/chat/
          */
-        sendMessage: async (content: string): Promise<{ userMessage: ChatMessage; aiResponse: ChatMessage }> => {
-            // const response = await fetch('/api/chat/send', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({ content }),
-            // });
-            // if (!response.ok) throw new Error('Failed to send message');
-            // return response.json();
+        sendMessage: async (content: string, language: ChatMessageCreate['language'] = 'English'): Promise<{ userMessage: ChatMessage; aiResponse: ChatMessage }> => {
+            const response = await fetch(`${API_V1}/chat/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...tokenManager.getAuthHeaders(),
+                },
+                body: JSON.stringify({
+                    message: content,
+                    language: language,
+                } as ChatMessageCreate),
+            });
+
+            const result = await handleResponse<ChatMessageResponse>(response);
 
             const userMessage: ChatMessage = {
                 id: `user-${Date.now()}`,
                 role: 'user',
-                content,
+                content: content,
                 timestamp: new Date(),
             };
-
-            await new Promise((resolve) => setTimeout(resolve, 1500));
 
             const aiResponse: ChatMessage = {
                 id: `ai-${Date.now()}`,
                 role: 'assistant',
-                content: AI_RESPONSES[Math.floor(Math.random() * AI_RESPONSES.length)],
+                content: result.response,
                 timestamp: new Date(),
             };
 
@@ -365,12 +531,113 @@ export const api = {
         },
 
         /**
-         * Clear chat history
+         * Clear chat history (client-side only for now)
          */
         clearHistory: async (): Promise<void> => {
-            // await fetch('/api/chat/clear', { method: 'DELETE' });
             return new Promise((resolve) => setTimeout(resolve, 300));
+        }
+    },
+
+    // =========================================================================
+    // Expense Processing
+    // =========================================================================
+    expense: {
+        /**
+         * Process a bill image and create transaction
+         * Backend: POST /api/v1/expense/process-bill
+         */
+        processBill: async (file: File): Promise<TransactionBackend> => {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch(`${API_V1}/expense/process-bill`, {
+                method: 'POST',
+                headers: {
+                    ...tokenManager.getAuthHeaders(),
+                },
+                body: formData,
+            });
+            return handleResponse(response);
+        }
+    },
+
+    // =========================================================================
+    // Document Management
+    // =========================================================================
+    documents: {
+        /**
+         * Get user's documents
+         */
+        getDocuments: async (): Promise<Document[]> => {
+            const user = await api.auth.getUser();
+            return user.documents;
+        }
+    },
+
+    // =========================================================================
+    // OCR Service
+    // =========================================================================
+    ocr: {
+        /**
+         * Upload image and extract text via OCR
+         * Backend: POST /api/v1/ocr/upload
+         */
+        upload: async (file: File): Promise<{ id: number; filename: string; extracted_text: string; owner_id: number }> => {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch(`${API_V1}/ocr/upload`, {
+                method: 'POST',
+                headers: {
+                    ...tokenManager.getAuthHeaders(),
+                },
+                body: formData,
+            });
+            return handleResponse(response);
+        }
+    },
+
+    // =========================================================================
+    // Document Analysis
+    // =========================================================================
+    documentAnalysis: {
+        /**
+         * Analyze document image for structured data extraction
+         * Backend: POST /api/v1/document-analysis/analyze
+         */
+        analyze: async (file: File): Promise<{ document_type: string; extracted_data: Record<string, unknown> }> => {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch(`${API_V1}/document-analysis/analyze`, {
+                method: 'POST',
+                headers: {
+                    ...tokenManager.getAuthHeaders(),
+                },
+                body: formData,
+            });
+            return handleResponse(response);
+        }
+    },
+
+    // =========================================================================
+    // Fraud Detection
+    // =========================================================================
+    fraud: {
+        /**
+         * Analyze text for potential fraud
+         * Backend: POST /api/v1/fraud/analyze
+         */
+        analyze: async (text: string): Promise<{ is_scam: boolean; reason: string }> => {
+            const response = await fetch(`${API_V1}/fraud/analyze`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...tokenManager.getAuthHeaders(),
+                },
+                body: JSON.stringify({ text }),
+            });
+            return handleResponse(response);
         }
     }
 };
-

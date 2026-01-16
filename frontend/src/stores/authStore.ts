@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { api, User } from '@/services/api';
+import { api, User, tokenManager } from '@/services/api';
 
 interface AuthState {
     user: User | null;
@@ -9,10 +9,11 @@ interface AuthState {
     error: string | null;
 
     // Actions
-    login: (email: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<void>;
     logout: () => void;
     fetchUser: () => Promise<void>;
     clearError: () => void;
+    checkAuth: () => boolean;
 }
 
 /**
@@ -27,19 +28,15 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
 
-            login: async (email: string) => {
+            login: async (email: string, password: string) => {
                 try {
                     set({ isLoading: true, error: null });
 
-                    // const response = await fetch('/api/auth/login', {
-                    //     method: 'POST',
-                    //     headers: { 'Content-Type': 'application/json' },
-                    //     body: JSON.stringify({ email }),
-                    // });
-                    // if (!response.ok) throw new Error('Login failed');
-                    // const user = await response.json();
+                    // Login returns a token, which is stored by the API
+                    await api.auth.login(email, password);
 
-                    const user = await api.auth.login(email);
+                    // Fetch user details after login
+                    const user = await api.auth.getUser();
                     set({ user, isAuthenticated: true, isLoading: false });
                 } catch (err) {
                     const message = err instanceof Error ? err.message : 'Login failed';
@@ -49,7 +46,7 @@ export const useAuthStore = create<AuthState>()(
             },
 
             logout: () => {
-                // await fetch('/api/auth/logout', { method: 'POST' });
+                api.auth.logout();
                 set({ user: null, isAuthenticated: false, error: null });
             },
 
@@ -57,15 +54,17 @@ export const useAuthStore = create<AuthState>()(
                 try {
                     set({ isLoading: true });
 
-                    // const response = await fetch('/api/auth/me');
-                    // if (!response.ok) throw new Error('Not authenticated');
-                    // const user = await response.json();
-
                     const user = await api.auth.getUser();
                     set({ user, isAuthenticated: true, isLoading: false });
                 } catch {
+                    // If fetch fails, clear auth state
+                    tokenManager.removeToken();
                     set({ user: null, isAuthenticated: false, isLoading: false });
                 }
+            },
+
+            checkAuth: () => {
+                return api.auth.isAuthenticated();
             },
 
             clearError: () => set({ error: null }),

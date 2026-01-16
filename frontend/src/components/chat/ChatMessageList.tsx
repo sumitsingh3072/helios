@@ -33,7 +33,7 @@ export function ChatMessageList({ messages, isSending }: ChatMessageListProps) {
     return (
         <div
             ref={containerRef}
-            className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y px-3 md:px-4 py-4 md:py-6 space-y-4 md:space-y-8 relative z-10"
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y px-2 sm:px-3 md:px-4 py-3 md:py-6 space-y-3 sm:space-y-4 md:space-y-8 relative z-10"
             style={{ WebkitOverflowScrolling: 'touch' }}
         >
             {/* Time Divider */}

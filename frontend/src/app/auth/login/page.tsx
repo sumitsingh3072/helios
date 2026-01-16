@@ -6,19 +6,32 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { api, ApiError } from "@/services/api";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        // Simulate login
-        setTimeout(() => {
-            setLoading(false);
+        setError(null);
+
+        try {
+            await api.auth.login(email, password);
             router.push("/dashboard");
-        }, 1500);
+        } catch (err) {
+            if (err instanceof ApiError) {
+                setError(err.message);
+            } else {
+                setError("Failed to login. Please try again.");
+            }
+            setLoading(false);
+        }
     };
 
     return (
@@ -30,6 +43,13 @@ export default function LoginPage() {
                 </p>
             </div>
 
+            {error && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-3 text-red-400 text-sm">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    {error}
+                </div>
+            )}
+
             <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
@@ -39,6 +59,9 @@ export default function LoginPage() {
                         required
                         type="email"
                         className="h-11"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={loading}
                     />
                 </div>
                 <div className="space-y-2">
@@ -56,6 +79,9 @@ export default function LoginPage() {
                         required
                         type="password"
                         className="h-11"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={loading}
                     />
                 </div>
 
@@ -64,7 +90,14 @@ export default function LoginPage() {
                     type="submit"
                     disabled={loading}
                 >
-                    {loading ? "Signing in..." : "Sign In"}
+                    {loading ? (
+                        <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Signing in...
+                        </>
+                    ) : (
+                        "Sign In"
+                    )}
                 </Button>
             </form>
 

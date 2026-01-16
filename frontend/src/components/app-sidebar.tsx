@@ -11,6 +11,7 @@ import {
     Zap,
     ChevronLeft,
     ChevronRight,
+    ScanLine,
 } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
@@ -28,9 +29,9 @@ interface AppSidebarProps {
 const sidebarItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
     { icon: MessageSquare, label: "AI Chat", href: "/dashboard/chat" },
+    { icon: ScanLine, label: "Scanner", href: "/dashboard/scanner" },
     { icon: PieChart, label: "Insights", href: "/dashboard/insights" },
     { icon: CreditCard, label: "Transactions", href: "/dashboard/transactions" },
-    // { icon: TrendingUp, label: "Investments", href: "/dashboard/investments" },
     { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
 

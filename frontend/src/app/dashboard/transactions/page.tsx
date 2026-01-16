@@ -1,10 +1,12 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { GlassCard } from "@/components/dashboard/glass-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Filter, Search, ArrowUpRight, ArrowDownLeft, Download, RefreshCw, AlertCircle } from "lucide-react";
+import { Filter, Search, ArrowUpRight, ArrowDownLeft, Download, RefreshCw, AlertCircle, Upload, X, Loader2, Camera } from "lucide-react";
 import { useTransactions } from "@/hooks/useTransactions";
+import { api, ApiError } from "@/services/api";
 
 type TransactionFilter = 'all' | 'income' | 'expense' | 'pending';
 
@@ -32,6 +34,65 @@ export default function TransactionsPage() {
         refresh,
     } = useTransactions();
 
+    // Bill upload state
+    const [showUploadModal, setShowUploadModal] = useState(false);
+    const [uploadFile, setUploadFile] = useState<File | null>(null);
+    const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+    const [uploadSuccess, setUploadSuccess] = useState(false);
+
+    const handleFileSelect = (file: File) => {
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            setUploadError("Please upload a PNG, JPG, or WEBP image.");
+            return;
+        }
+        setUploadFile(file);
+        setUploadError(null);
+        setUploadSuccess(false);
+
+        const reader = new FileReader();
+        reader.onload = (e) => setUploadPreview(e.target?.result as string);
+        reader.readAsDataURL(file);
+    };
+
+    const handleProcessBill = async () => {
+        if (!uploadFile) return;
+
+        setIsProcessing(true);
+        setUploadError(null);
+
+        try {
+            await api.expense.processBill(uploadFile);
+            setUploadSuccess(true);
+            setUploadFile(null);
+            setUploadPreview(null);
+            // Refresh transactions to show new entry
+            setTimeout(() => {
+                refresh();
+                setShowUploadModal(false);
+                setUploadSuccess(false);
+            }, 1500);
+        } catch (err) {
+            if (err instanceof ApiError) {
+                setUploadError(err.message);
+            } else {
+                setUploadError("Failed to process bill. Please try again.");
+            }
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const closeModal = () => {
+        setShowUploadModal(false);
+        setUploadFile(null);
+        setUploadPreview(null);
+        setUploadError(null);
+        setUploadSuccess(false);
+    };
+
     if (error) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] text-white">
@@ -47,6 +108,72 @@ export default function TransactionsPage() {
 
     return (
         <div className="space-y-6 text-white min-h-screen pb-10">
+            {/* Upload Modal */}
+            {showUploadModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 w-full max-w-md relative">
+                        <button onClick={closeModal} className="absolute top-4 right-4 text-gray-500 hover:text-white">
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                            <Camera className="w-5 h-5 text-blue-400" />
+                            Upload Bill
+                        </h2>
+                        <p className="text-gray-400 text-sm mb-4">
+                            Upload a photo of your receipt or bill. We&apos;ll automatically extract the details.
+                        </p>
+
+                        {uploadError && (
+                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2 text-red-400 text-sm mb-4">
+                                <AlertCircle className="w-4 h-4" />
+                                {uploadError}
+                            </div>
+                        )}
+
+                        {uploadSuccess && (
+                            <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center gap-2 text-green-400 text-sm mb-4">
+                                <RefreshCw className="w-4 h-4" />
+                                Transaction created successfully!
+                            </div>
+                        )}
+
+                        {/* Drop Zone */}
+                        <div className={`
+                            relative border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer mb-4
+                            ${uploadPreview ? 'border-green-500/50 bg-green-500/5' : 'border-white/10 hover:border-white/20 hover:bg-white/5'}
+                        `}>
+                            <input
+                                type="file"
+                                accept="image/png,image/jpeg,image/jpg,image/webp"
+                                onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            />
+                            {uploadPreview ? (
+                                <img src={uploadPreview} alt="Preview" className="max-h-32 mx-auto rounded-lg object-contain" />
+                            ) : (
+                                <div className="space-y-2">
+                                    <Upload className="w-8 h-8 mx-auto text-gray-500" />
+                                    <p className="text-sm text-gray-400">Click or drag to upload</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <Button
+                            onClick={handleProcessBill}
+                            disabled={!uploadFile || isProcessing}
+                            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold h-11"
+                        >
+                            {isProcessing ? (
+                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</>
+                            ) : (
+                                <><Upload className="w-4 h-4 mr-2" />Process Bill</>
+                            )}
+                        </Button>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
@@ -54,6 +181,14 @@ export default function TransactionsPage() {
                     <p className="text-gray-400 text-sm mt-1">Manage and view your recent financial activity.</p>
                 </div>
                 <div className="flex gap-3">
+                    <Button
+                        className="bg-blue-600 hover:bg-blue-500 text-white px-4 md:px-6 rounded-full font-bold shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)]"
+                        onClick={() => setShowUploadModal(true)}
+                    >
+                        <Camera className="w-4 h-4 mr-2" />
+                        <span className="hidden sm:inline">Upload Bill</span>
+                        <span className="sm:hidden">Upload</span>
+                    </Button>
                     <Button
                         variant="outline"
                         className="border-white/10 hover:bg-white/5 text-gray-300 font-medium rounded-full px-4 md:px-6"
@@ -63,7 +198,7 @@ export default function TransactionsPage() {
                         <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                         <span className="hidden sm:inline">Refresh</span>
                     </Button>
-                    <Button className="bg-white text-black hover:bg-gray-200 px-4 md:px-6 rounded-full font-bold shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
+                    <Button variant="outline" className="border-white/10 hover:bg-white/5 text-gray-300 px-4 md:px-6 rounded-full font-medium">
                         <Download className="w-4 h-4 mr-2" />
                         <span className="hidden sm:inline">Export CSV</span>
                     </Button>
@@ -89,8 +224,8 @@ export default function TransactionsPage() {
                                 key={filter.value}
                                 onClick={() => setActiveFilter(filter.value)}
                                 className={`px-3 md:px-4 py-2 rounded-xl text-xs font-bold border transition-all ${activeFilter === filter.value
-                                        ? 'bg-white text-black border-white'
-                                        : 'bg-transparent border-white/10 text-gray-500 hover:text-white hover:border-white/20'
+                                    ? 'bg-white text-black border-white'
+                                    : 'bg-transparent border-white/10 text-gray-500 hover:text-white hover:border-white/20'
                                     }`}
                             >
                                 {filter.label}
@@ -156,8 +291,8 @@ export default function TransactionsPage() {
                                 {/* Description with icon */}
                                 <div className="col-span-12 md:col-span-3 flex items-center gap-3">
                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${transaction.amount > 0
-                                            ? 'bg-green-500/10 border-green-500/20'
-                                            : 'bg-red-500/10 border-red-500/20'
+                                        ? 'bg-green-500/10 border-green-500/20'
+                                        : 'bg-red-500/10 border-red-500/20'
                                         }`}>
                                         {transaction.amount > 0 ? (
                                             <ArrowDownLeft className="w-5 h-5 text-green-400" />
@@ -196,10 +331,10 @@ export default function TransactionsPage() {
                                 {/* Status */}
                                 <div className="hidden md:flex col-span-2 items-center">
                                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${transaction.status === 'completed'
-                                            ? 'bg-green-500/10 border border-green-500/20 text-green-400'
-                                            : transaction.status === 'processing'
-                                                ? 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-400'
-                                                : 'bg-gray-500/10 border border-gray-500/20 text-gray-400'
+                                        ? 'bg-green-500/10 border border-green-500/20 text-green-400'
+                                        : transaction.status === 'processing'
+                                            ? 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-400'
+                                            : 'bg-gray-500/10 border border-gray-500/20 text-gray-400'
                                         }`}>
                                         {transaction.status}
                                     </span>
