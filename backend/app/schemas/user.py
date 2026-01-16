@@ -1,7 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
-
+from typing import Optional
 from backend.app.schemas.transactions import Transaction
-
 # Import the schemas for the related models
 from .document import Document
 from .chat_message import ChatMessage
@@ -12,6 +11,7 @@ class UserBase(BaseModel):
     """Base schema with common user attributes."""
     email: EmailStr
     full_name: str | None = None
+    phone_number: str | None = Field(None, description="Indian mobile number (e.g., 9876543210)")
 
 
 class UserCreate(UserBase):
@@ -22,6 +22,12 @@ class UserCreate(UserBase):
         max_length=256,
         description="Password must be at least 8 characters long."
     )
+    phone_number: str = Field(..., description="Phone number is required for Bank Integration")
+
+class UserUpdate(UserBase):
+    """Schema for updating user details."""
+    password: Optional[str] = None
+    phone_number: Optional[str] = None
 
 
 class User(UserBase):
