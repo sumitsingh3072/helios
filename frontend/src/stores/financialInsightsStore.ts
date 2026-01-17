@@ -97,35 +97,69 @@ function normalizeReport(data: unknown): FinancialAdvisoryReport | null {
 
     if (!report) return null;
 
-    // Extract client profile
+    console.log('Normalizing report:', report);
+
+    // Extract client profile - handle both "client_profile" and "client_information"
+    const clientInfo = report.client_profile || report.client_information || {};
     const clientProfile: ClientProfile = {
-        name: report.client_profile?.name || 'Unknown',
-        address: report.client_profile?.address || '',
-        account_number: report.client_profile?.account_number || 'N/A',
-        analysis_period: report.client_profile?.analysis_period || 'N/A'
+        name: clientInfo.name || 'Unknown',
+        address: clientInfo.address || '',
+        account_number: clientInfo.account_number || 'N/A',
+        analysis_period: clientInfo.analysis_period || clientInfo.period_under_review || 'N/A'
     };
 
-    // Extract financial analysis - handle both "financial_analysis" and "detailed_analysis"
-    const analysis = report.financial_analysis || report.detailed_analysis || {};
+    // Extract financial analysis - handle multiple formats:
+    // - "financial_analysis" 
+    // - "detailed_analysis"
+    // - "key_observations"
+    const analysis = report.financial_analysis || report.detailed_analysis || report.key_observations || {};
+
+    // Handle liquidity - can be "liquidity_assessment" or "liquidity_trend"
+    const liquidityData = analysis.liquidity_assessment || analysis.liquidity_trend || {};
+
+    // Try to extract balances from description text if not directly available
+    let startBalance = liquidityData.start_balance || liquidityData.opening_balance || 0;
+    let endBalance = liquidityData.end_balance || liquidityData.closing_balance || 0;
+
+    // Parse balances from description if available (e.g., "grew from $69.96 to $586.71")
+    const description = liquidityData.description || '';
+    if ((!startBalance || !endBalance) && description) {
+        const balanceMatch = description.match(/\$?([\d,]+\.?\d*)\s*to\s*\$?([\d,]+\.?\d*)/);
+        if (balanceMatch) {
+            startBalance = startBalance || parseFloat(balanceMatch[1].replace(/,/g, ''));
+            endBalance = endBalance || parseFloat(balanceMatch[2].replace(/,/g, ''));
+        }
+    }
 
     const liquidityAssessment: LiquidityAssessment = {
-        status: analysis.liquidity_assessment?.status || 'Unknown',
-        start_balance: analysis.liquidity_assessment?.start_balance || 0,
-        end_balance: analysis.liquidity_assessment?.end_balance || 0,
-        insight: analysis.liquidity_assessment?.insight || ''
+        status: liquidityData.status || 'Unknown',
+        start_balance: typeof startBalance === 'number' ? startBalance : parseFloat(startBalance) || 0,
+        end_balance: typeof endBalance === 'number' ? endBalance : parseFloat(endBalance) || 0,
+        insight: liquidityData.insight || liquidityData.description || ''
     };
+
+    // Handle cash flow - can be "cash_flow_dynamics" with various field names
+    const cashFlowData = analysis.cash_flow_dynamics || {};
+    const totalCredits = cashFlowData.total_credits || cashFlowData.total_inflow || 0;
+    const totalDebits = cashFlowData.total_debits || cashFlowData.total_outflow || 0;
 
     const cashFlowDynamics: CashFlowDynamics = {
-        total_credits: analysis.cash_flow_dynamics?.total_credits || 0,
-        total_debits: analysis.cash_flow_dynamics?.total_debits || 0,
-        net_flow_observation: analysis.cash_flow_dynamics?.net_flow_observation || ''
+        total_credits: typeof totalCredits === 'number' ? totalCredits : parseFloat(totalCredits) || 0,
+        total_debits: typeof totalDebits === 'number' ? totalDebits : parseFloat(totalDebits) || 0,
+        net_flow_observation: cashFlowData.net_flow_observation || cashFlowData.net_result || ''
     };
 
+    // Handle costs - can be "cost_benefit_analysis" or "cost_vs_return"
+    const costData = analysis.cost_benefit_analysis || analysis.cost_vs_return || {};
+    const totalFees = costData.total_fees || costData.fees_charged || 0;
+    const interestPeriod = costData.interest_earned_period || costData.interest_earned || 0;
+    const interestYtd = costData.interest_earned_ytd || costData.interest_earned || 0;
+
     const costBenefitAnalysis: CostBenefitAnalysis = {
-        total_fees: analysis.cost_benefit_analysis?.total_fees || 0,
-        interest_earned_period: analysis.cost_benefit_analysis?.interest_earned_period || 0,
-        interest_earned_ytd: analysis.cost_benefit_analysis?.interest_earned_ytd || 0,
-        insight: analysis.cost_benefit_analysis?.insight || ''
+        total_fees: typeof totalFees === 'number' ? totalFees : parseFloat(totalFees) || 0,
+        interest_earned_period: typeof interestPeriod === 'number' ? interestPeriod : parseFloat(interestPeriod) || 0,
+        interest_earned_ytd: typeof interestYtd === 'number' ? interestYtd : parseFloat(interestYtd) || 0,
+        insight: costData.insight || costData.analysis || ''
     };
 
     // Extract recommendations
@@ -137,6 +171,13 @@ function normalizeReport(data: unknown): FinancialAdvisoryReport | null {
             action: r.action || '',
             details: r.details || r.rationale || ''
         };
+    });
+
+    console.log('Normalized result:', {
+        clientProfile,
+        liquidityAssessment,
+        cashFlowDynamics,
+        costBenefitAnalysis
     });
 
     return {
