@@ -228,210 +228,299 @@ export default function DashboardPage() {
                 </div>
             </motion.div>
 
-            {/* Account Summary Row */}
+            {/* Overview Cards Row - Matching Reference UI */}
             <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Client Info */}
+                {/* Total Credits Card */}
                 <motion.div variants={cardVariants}>
-                    <GlassCard className="p-5 bg-gradient-to-br from-[#050A14] via-[#0a1628] to-[#050A14] border-white/5 relative overflow-hidden group hover:border-blue-500/20 transition-all duration-500">
-                        <motion.div
-                            className="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/20 rounded-full blur-[40px]"
-                            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-                            transition={{ duration: 4, repeat: Infinity }}
-                        />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-3">
-                                <motion.div
-                                    className="p-2 bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/20 rounded-lg backdrop-blur-sm"
-                                    whileHover={{ rotate: 10 }}
-                                >
-                                    <User className="w-4 h-4 text-blue-400" />
-                                </motion.div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Account Holder</p>
+                    <div className="relative p-5 rounded-2xl bg-gradient-to-br from-[#0d1829] via-[#111d2e] to-[#0a1420] border border-white/[0.06] overflow-hidden group hover:border-green-500/20 transition-all duration-500">
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-gradient-to-br from-green-500/20 to-green-600/5 border border-green-500/20 rounded-xl">
+                                    <ArrowUpRight className="w-4 h-4 text-green-400" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-white">Total Credits</p>
+                                    <p className="text-[11px] text-gray-500">Incoming Funds</p>
+                                </div>
                             </div>
-                            <p className="text-sm font-bold text-white truncate group-hover:text-blue-300 transition-colors">{client_profile.name}</p>
-                            <p className="text-xs text-gray-500 mt-1 font-mono">Acct: {client_profile.account_number}</p>
+                            <motion.div
+                                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer transition-colors"
+                                whileHover={{ scale: 1.1 }}
+                            >
+                                <ArrowUpRight className="w-3.5 h-3.5 text-gray-500" />
+                            </motion.div>
                         </div>
-                    </GlassCard>
+
+                        {/* Label */}
+                        <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold mb-1">TOTAL INFLOW</p>
+
+                        {/* Value */}
+                        <motion.p
+                            className="text-3xl font-bold text-white font-mono tracking-tight"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                        >
+                            ${totalCredits.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </motion.p>
+
+                        {/* Bottom Row */}
+                        <div className="flex items-center justify-between mt-4">
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                                <span className="text-xs text-green-400 font-medium">Active</span>
+                            </div>
+                            <span className="text-xs text-gray-600 font-mono">+${netCashFlow > 0 ? netCashFlow.toLocaleString('en-US') : '0'}</span>
+                        </div>
+
+                        {/* Mini Chart Decoration */}
+                        <div className="absolute bottom-0 right-0 w-24 h-12 opacity-30">
+                            <svg viewBox="0 0 100 40" className="w-full h-full">
+                                <path d="M0,35 Q20,30 40,25 T80,15 T100,10" fill="none" stroke="rgb(34, 197, 94)" strokeWidth="2" />
+                                <path d="M0,35 Q20,30 40,25 T80,15 T100,10 V40 H0 Z" fill="url(#greenGradient)" />
+                                <defs>
+                                    <linearGradient id="greenGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stopColor="rgb(34, 197, 94)" stopOpacity="0.3" />
+                                        <stop offset="100%" stopColor="rgb(34, 197, 94)" stopOpacity="0" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                    </div>
                 </motion.div>
 
-                {/* Period */}
+                {/* Total Debits Card */}
                 <motion.div variants={cardVariants}>
-                    <GlassCard className="p-5 bg-gradient-to-br from-[#050A14] via-[#0a1628] to-[#050A14] border-white/5 relative overflow-hidden group hover:border-purple-500/20 transition-all duration-500">
-                        <motion.div
-                            className="absolute -right-6 -top-6 w-24 h-24 bg-purple-500/20 rounded-full blur-[40px]"
-                            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-                            transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
-                        />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-3">
-                                <motion.div
-                                    className="p-2 bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/20 rounded-lg backdrop-blur-sm"
-                                    whileHover={{ rotate: 10 }}
-                                >
-                                    <Calendar className="w-4 h-4 text-purple-400" />
-                                </motion.div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Analysis Period</p>
+                    <div className="relative p-5 rounded-2xl bg-gradient-to-br from-[#0d1829] via-[#111d2e] to-[#0a1420] border border-white/[0.06] overflow-hidden group hover:border-red-500/20 transition-all duration-500">
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-gradient-to-br from-red-500/20 to-red-600/5 border border-red-500/20 rounded-xl">
+                                    <ArrowDownRight className="w-4 h-4 text-red-400" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-white">Total Debits</p>
+                                    <p className="text-[11px] text-gray-500">Outgoing Funds</p>
+                                </div>
                             </div>
-                            <p className="text-sm font-bold text-white group-hover:text-purple-300 transition-colors">{client_profile.analysis_period}</p>
+                            <motion.div
+                                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer transition-colors"
+                                whileHover={{ scale: 1.1 }}
+                            >
+                                <ArrowUpRight className="w-3.5 h-3.5 text-gray-500" />
+                            </motion.div>
                         </div>
-                    </GlassCard>
+
+                        {/* Label */}
+                        <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold mb-1">TOTAL OUTFLOW</p>
+
+                        {/* Value */}
+                        <motion.p
+                            className="text-3xl font-bold text-white font-mono tracking-tight"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                        >
+                            ${totalDebits.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </motion.p>
+
+                        {/* Bottom Row */}
+                        <div className="flex items-center justify-between mt-4">
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+                                <span className="text-xs text-red-400 font-medium">Active</span>
+                            </div>
+                            <span className="text-xs text-gray-600 font-mono">-${totalDebits.toLocaleString('en-US')}</span>
+                        </div>
+
+                        {/* Mini Chart Decoration */}
+                        <div className="absolute bottom-0 right-0 w-24 h-12 opacity-30">
+                            <svg viewBox="0 0 100 40" className="w-full h-full">
+                                <path d="M0,10 Q20,15 40,20 T80,30 T100,35" fill="none" stroke="rgb(239, 68, 68)" strokeWidth="2" />
+                                <path d="M0,10 Q20,15 40,20 T80,30 T100,35 V40 H0 Z" fill="url(#redGradient)" />
+                                <defs>
+                                    <linearGradient id="redGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stopColor="rgb(239, 68, 68)" stopOpacity="0.3" />
+                                        <stop offset="100%" stopColor="rgb(239, 68, 68)" stopOpacity="0" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                    </div>
                 </motion.div>
 
+                {/* Savings Rate Card */}
+                <motion.div variants={cardVariants}>
+                    <div className="relative p-5 rounded-2xl bg-gradient-to-br from-[#0d1829] via-[#111d2e] to-[#0a1420] border border-white/[0.06] overflow-hidden group hover:border-blue-500/20 transition-all duration-500">
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-gradient-to-br from-blue-500/20 to-blue-600/5 border border-blue-500/20 rounded-xl">
+                                    <PiggyBank className="w-4 h-4 text-blue-400" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-white">Savings Rate</p>
+                                    <p className="text-[11px] text-gray-500">Net Savings %</p>
+                                </div>
+                            </div>
+                            <motion.div
+                                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer transition-colors"
+                                whileHover={{ scale: 1.1 }}
+                            >
+                                <ArrowUpRight className="w-3.5 h-3.5 text-gray-500" />
+                            </motion.div>
+                        </div>
+
+                        {/* Label */}
+                        <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold mb-1">SAVINGS RATIO</p>
+
+                        {/* Value */}
+                        <motion.p
+                            className="text-3xl font-bold text-white font-mono tracking-tight"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                        >
+                            {savingsRate.toFixed(1)}%
+                        </motion.p>
+
+                        {/* Bottom Row */}
+                        <div className="flex items-center justify-between mt-4">
+                            <div className="flex items-center gap-1.5">
+                                <span className={cn("w-2 h-2 rounded-full animate-pulse", savingsRate >= 20 ? "bg-green-400" : "bg-yellow-400")} />
+                                <span className={cn("text-xs font-medium", savingsRate >= 20 ? "text-green-400" : "text-yellow-400")}>
+                                    {savingsRate >= 20 ? 'Healthy' : 'Moderate'}
+                                </span>
+                            </div>
+                            <span className="text-xs text-gray-600 font-mono">+${netCashFlow.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                        </div>
+
+                        {/* Mini Chart Decoration */}
+                        <div className="absolute bottom-0 right-0 w-24 h-12 opacity-30">
+                            <svg viewBox="0 0 100 40" className="w-full h-full">
+                                <path d="M0,30 Q25,25 50,20 T100,10" fill="none" stroke="rgb(59, 130, 246)" strokeWidth="2" />
+                                <path d="M0,30 Q25,25 50,20 T100,10 V40 H0 Z" fill="url(#blueGradient)" />
+                                <defs>
+                                    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stopColor="rgb(59, 130, 246)" stopOpacity="0.3" />
+                                        <stop offset="100%" stopColor="rgb(59, 130, 246)" stopOpacity="0" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Featured Card - Liquid Staking Style */}
+                <motion.div variants={cardVariants}>
+                    <div className="relative p-5 rounded-2xl bg-gradient-to-br from-[#0c2135] via-[#0f2844] to-[#0a1d33] border border-cyan-500/20 overflow-hidden group">
+                        {/* Glow Effect */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/20 blur-[60px] pointer-events-none" />
+
+                        {/* Badge */}
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-4">
+                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                            <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">Financial Summary</span>
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="text-lg font-bold text-white mb-1">Balance Growth</h3>
+                        <p className="text-sm text-gray-400 mb-4">
+                            +{growthPercent.toFixed(0)}% growth this period
+                        </p>
+
+                        {/* CTA Button */}
+                        <Link href="/dashboard/insights">
+                            <motion.button
+                                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 transition-shadow"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                View Insights
+                                <ArrowUpRight className="w-4 h-4" />
+                            </motion.button>
+                        </Link>
+                    </div>
+                </motion.div>
+            </motion.div>
+
+            {/* Second Row - Balance & Metrics */}
+            <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Starting Balance */}
                 <motion.div variants={cardVariants}>
-                    <GlassCard className="p-5 bg-gradient-to-br from-[#050A14] via-[#0a1628] to-[#050A14] border-white/5 relative overflow-hidden group hover:border-orange-500/20 transition-all duration-500">
-                        <motion.div
-                            className="absolute -right-6 -top-6 w-24 h-24 bg-orange-500/20 rounded-full blur-[40px]"
-                            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-                            transition={{ duration: 4, repeat: Infinity, delay: 1 }}
-                        />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-3">
-                                <motion.div
-                                    className="p-2 bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 rounded-lg backdrop-blur-sm"
-                                    whileHover={{ rotate: 10 }}
-                                >
+                    <div className="relative p-5 rounded-2xl bg-gradient-to-br from-[#0d1829] via-[#111d2e] to-[#0a1420] border border-white/[0.06] overflow-hidden group hover:border-orange-500/20 transition-all duration-500">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-gradient-to-br from-orange-500/20 to-orange-600/5 border border-orange-500/20 rounded-xl">
                                     <Wallet className="w-4 h-4 text-orange-400" />
-                                </motion.div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Starting Balance</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-white">Opening Balance</p>
+                                    <p className="text-[11px] text-gray-500">Period Start</p>
+                                </div>
                             </div>
-                            <p className="text-2xl font-bold text-orange-400 font-mono">
-                                ${startBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </p>
                         </div>
-                    </GlassCard>
+                        <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold mb-1">START BALANCE</p>
+                        <p className="text-2xl font-bold text-orange-400 font-mono">${startBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    </div>
                 </motion.div>
 
                 {/* Ending Balance */}
                 <motion.div variants={cardVariants}>
-                    <GlassCard className="p-5 bg-gradient-to-br from-[#050A14] via-[#0a1628] to-[#050A14] border-white/5 relative overflow-hidden group hover:border-green-500/20 transition-all duration-500">
-                        <motion.div
-                            className="absolute -right-6 -top-6 w-24 h-24 bg-green-500/20 rounded-full blur-[40px]"
-                            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-                            transition={{ duration: 4, repeat: Infinity, delay: 1.5 }}
-                        />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-3">
-                                <motion.div
-                                    className="p-2 bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/20 rounded-lg backdrop-blur-sm"
-                                    whileHover={{ rotate: 10 }}
-                                >
+                    <div className="relative p-5 rounded-2xl bg-gradient-to-br from-[#0d1829] via-[#111d2e] to-[#0a1420] border border-white/[0.06] overflow-hidden group hover:border-green-500/20 transition-all duration-500">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-gradient-to-br from-green-500/20 to-green-600/5 border border-green-500/20 rounded-xl">
                                     <Wallet className="w-4 h-4 text-green-400" />
-                                </motion.div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Ending Balance</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-white">Closing Balance</p>
+                                    <p className="text-[11px] text-gray-500">Period End</p>
+                                </div>
                             </div>
-                            <p className="text-2xl font-bold text-green-400 font-mono">
-                                ${endBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </p>
                         </div>
-                    </GlassCard>
-                </motion.div>
-            </motion.div>
-
-            {/* Cash Flow & Metrics Row */}
-            <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Total Credits */}
-                <motion.div variants={cardVariants}>
-                    <GlassCard className="p-5 bg-gradient-to-br from-[#050A14] via-[#0a1628] to-[#050A14] border-white/5 relative overflow-hidden group hover:border-green-500/30 transition-all duration-500 hover:shadow-lg hover:shadow-green-500/10">
-                        <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-3">
-                                <motion.div
-                                    className="p-2 bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/20 rounded-lg"
-                                    whileHover={{ scale: 1.1 }}
-                                >
-                                    <ArrowUpRight className="w-4 h-4 text-green-400" />
-                                </motion.div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Total Credits</p>
-                            </div>
-                            <motion.p
-                                className="text-2xl font-bold text-green-400 font-mono"
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.3 }}
-                            >
-                                ${totalCredits.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </motion.p>
-                        </div>
-                    </GlassCard>
-                </motion.div>
-
-                {/* Total Debits */}
-                <motion.div variants={cardVariants}>
-                    <GlassCard className="p-5 bg-gradient-to-br from-[#050A14] via-[#0a1628] to-[#050A14] border-white/5 relative overflow-hidden group hover:border-red-500/30 transition-all duration-500 hover:shadow-lg hover:shadow-red-500/10">
-                        <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-3">
-                                <motion.div
-                                    className="p-2 bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/20 rounded-lg"
-                                    whileHover={{ scale: 1.1 }}
-                                >
-                                    <ArrowDownRight className="w-4 h-4 text-red-400" />
-                                </motion.div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Total Debits</p>
-                            </div>
-                            <motion.p
-                                className="text-2xl font-bold text-red-400 font-mono"
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.4 }}
-                            >
-                                ${totalDebits.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </motion.p>
-                        </div>
-                    </GlassCard>
+                        <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold mb-1">END BALANCE</p>
+                        <p className="text-2xl font-bold text-green-400 font-mono">${endBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    </div>
                 </motion.div>
 
                 {/* Total Fees */}
                 <motion.div variants={cardVariants}>
-                    <GlassCard className="p-5 bg-gradient-to-br from-[#050A14] via-[#0a1628] to-[#050A14] border-white/5 relative overflow-hidden group hover:border-orange-500/30 transition-all duration-500 hover:shadow-lg hover:shadow-orange-500/10">
-                        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-3">
-                                <motion.div
-                                    className="p-2 bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 rounded-lg"
-                                    whileHover={{ scale: 1.1 }}
-                                >
-                                    <Flame className="w-4 h-4 text-orange-400" />
-                                </motion.div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Total Fees</p>
+                    <div className="relative p-5 rounded-2xl bg-gradient-to-br from-[#0d1829] via-[#111d2e] to-[#0a1420] border border-white/[0.06] overflow-hidden group hover:border-red-500/20 transition-all duration-500">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-gradient-to-br from-red-500/20 to-red-600/5 border border-red-500/20 rounded-xl">
+                                    <Flame className="w-4 h-4 text-red-400" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-white">Total Fees</p>
+                                    <p className="text-[11px] text-gray-500">Service Charges</p>
+                                </div>
                             </div>
-                            <motion.p
-                                className="text-2xl font-bold text-orange-400 font-mono"
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.5 }}
-                            >
-                                ${cost_benefit_analysis.total_fees.toFixed(2)}
-                            </motion.p>
                         </div>
-                    </GlassCard>
+                        <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold mb-1">FEES PAID</p>
+                        <p className="text-2xl font-bold text-red-400 font-mono">${cost_benefit_analysis.total_fees.toFixed(2)}</p>
+                    </div>
                 </motion.div>
 
                 {/* Interest Earned */}
                 <motion.div variants={cardVariants}>
-                    <GlassCard className="p-5 bg-gradient-to-br from-[#050A14] via-[#0a1628] to-[#050A14] border-white/5 relative overflow-hidden group hover:border-blue-500/30 transition-all duration-500 hover:shadow-lg hover:shadow-blue-500/10">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-3">
-                                <motion.div
-                                    className="p-2 bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/20 rounded-lg"
-                                    whileHover={{ scale: 1.1 }}
-                                >
-                                    <DollarSign className="w-4 h-4 text-blue-400" />
-                                </motion.div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Interest (YTD)</p>
+                    <div className="relative p-5 rounded-2xl bg-gradient-to-br from-[#0d1829] via-[#111d2e] to-[#0a1420] border border-white/[0.06] overflow-hidden group hover:border-cyan-500/20 transition-all duration-500">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-gradient-to-br from-cyan-500/20 to-cyan-600/5 border border-cyan-500/20 rounded-xl">
+                                    <DollarSign className="w-4 h-4 text-cyan-400" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-white">Interest Earned</p>
+                                    <p className="text-[11px] text-gray-500">Year to Date</p>
+                                </div>
                             </div>
-                            <motion.p
-                                className="text-2xl font-bold text-blue-400 font-mono"
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.6 }}
-                            >
-                                ${cost_benefit_analysis.interest_earned_ytd.toFixed(2)}
-                            </motion.p>
                         </div>
-                    </GlassCard>
+                        <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold mb-1">INTEREST YTD</p>
+                        <p className="text-2xl font-bold text-cyan-400 font-mono">${cost_benefit_analysis.interest_earned_ytd.toFixed(2)}</p>
+                    </div>
                 </motion.div>
             </motion.div>
 
