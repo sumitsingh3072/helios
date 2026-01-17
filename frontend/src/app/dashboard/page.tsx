@@ -2,17 +2,21 @@
 
 import { GlassCard } from "@/components/dashboard/glass-card";
 import { StakingCard } from "@/components/dashboard/staking-card";
-import { ArrowUpRight, Wallet, Activity, Zap, Layers, RefreshCw, BarChart, AlertCircle, TrendingUp } from "lucide-react";
+import { ArrowUpRight, Wallet, Activity, Zap, Layers, RefreshCw, BarChart, AlertCircle, TrendingUp, TrendingDown, FileText, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "@/hooks/useDashboard";
+import { useFinancialInsightsStore } from "@/stores";
 import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 /**
  * Dashboard Overview Page - Orchestrator
- * Uses useDashboard hook for data, only responsible for layout
+ * Uses useDashboard hook for data and useFinancialInsightsStore for financial insights
  */
 export default function DashboardPage() {
     const { stats, stakingAssets, activities, isLoading, error, refresh } = useDashboard();
+    const { report } = useFinancialInsightsStore();
 
     // Get current date formatted
     const currentDate = new Date().toLocaleDateString('en-US', {
@@ -20,6 +24,18 @@ export default function DashboardPage() {
         month: 'long',
         day: 'numeric'
     });
+
+    // Get health status color
+    const getHealthColor = (status: string) => {
+        const lower = status.toLowerCase();
+        if (lower.includes('positive') || lower.includes('improving') || lower.includes('good') || lower === 'low') {
+            return 'text-green-400';
+        }
+        if (lower.includes('negative') || lower.includes('declining') || lower === 'high') {
+            return 'text-red-400';
+        }
+        return 'text-yellow-400';
+    };
 
     if (error) {
         return (
@@ -59,6 +75,105 @@ export default function DashboardPage() {
                     </Button>
                 </div>
             </div>
+
+            {/* Financial Insights Summary - Only show if report exists */}
+            {report && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Client Info */}
+                    <GlassCard className="p-5 bg-[#050A14] border-white/5">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                                <FileText className="w-4 h-4 text-blue-400" />
+                            </div>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Statement Analysis</p>
+                        </div>
+                        <p className="text-sm font-bold text-white truncate">{report.client_profile.name}</p>
+                        <p className="text-xs text-gray-500 mt-1">{report.client_profile.account_summary.statement_period}</p>
+                    </GlassCard>
+
+                    {/* Net Cash Flow */}
+                    <GlassCard className="p-5 bg-[#050A14] border-white/5">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                                <div className={cn(
+                                    "p-2 rounded-lg border",
+                                    (report.key_metrics.net_cash_flow.amount ?? 0) >= 0
+                                        ? "bg-green-500/10 border-green-500/20"
+                                        : "bg-red-500/10 border-red-500/20"
+                                )}>
+                                    {(report.key_metrics.net_cash_flow.amount ?? 0) >= 0
+                                        ? <TrendingUp className="w-4 h-4 text-green-400" />
+                                        : <TrendingDown className="w-4 h-4 text-red-400" />
+                                    }
+                                </div>
+                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Net Cash Flow</p>
+                            </div>
+                        </div>
+                        <p className={cn(
+                            "text-2xl font-bold",
+                            (report.key_metrics.net_cash_flow.amount ?? 0) >= 0 ? "text-green-400" : "text-red-400"
+                        )}>
+                            ${report.key_metrics.net_cash_flow.amount?.toFixed(2) || '0.00'}
+                        </p>
+                    </GlassCard>
+
+                    {/* Financial Health */}
+                    <GlassCard className="p-5 bg-[#050A14] border-white/5">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                                <Activity className="w-4 h-4 text-purple-400" />
+                            </div>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Financial Health</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            <span className={cn("text-xs font-bold", getHealthColor(report.financial_health_assessment.liquidity_status))}>
+                                {report.financial_health_assessment.liquidity_status}
+                            </span>
+                            <span className="text-gray-600">•</span>
+                            <span className={cn("text-xs font-bold", getHealthColor(report.financial_health_assessment.cash_flow_status))}>
+                                {report.financial_health_assessment.cash_flow_status}
+                            </span>
+                        </div>
+                    </GlassCard>
+
+                    {/* Risk Level */}
+                    <GlassCard className="p-5 bg-[#050A14] border-white/5">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className={cn(
+                                "p-2 rounded-lg border",
+                                report.financial_health_assessment.risk_level.toLowerCase() === 'low'
+                                    ? "bg-green-500/10 border-green-500/20"
+                                    : report.financial_health_assessment.risk_level.toLowerCase() === 'moderate'
+                                        ? "bg-yellow-500/10 border-yellow-500/20"
+                                        : "bg-red-500/10 border-red-500/20"
+                            )}>
+                                <Shield className={cn(
+                                    "w-4 h-4",
+                                    report.financial_health_assessment.risk_level.toLowerCase() === 'low'
+                                        ? "text-green-400"
+                                        : report.financial_health_assessment.risk_level.toLowerCase() === 'moderate'
+                                            ? "text-yellow-400"
+                                            : "text-red-400"
+                                )} />
+                            </div>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Risk Level</p>
+                        </div>
+                        <p className={cn(
+                            "text-lg font-bold",
+                            report.financial_health_assessment.risk_level.toLowerCase() === 'low'
+                                ? "text-green-400"
+                                : report.financial_health_assessment.risk_level.toLowerCase() === 'moderate'
+                                    ? "text-yellow-400"
+                                    : "text-red-400"
+                        )}>
+                            {report.financial_health_assessment.risk_level}
+                        </p>
+                        <Link href="/dashboard/insights" className="text-xs text-blue-400 hover:underline mt-2 inline-block">
+                            View Full Report →
+                        </Link>
+                    </GlassCard>
+                </div>
+            )}
 
             {/* Top Row: Statistics */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -219,7 +334,7 @@ export default function DashboardPage() {
                                     <div className="text-right">
                                         <p className="text-sm font-mono font-bold text-white">{activity.amount}</p>
                                         <p className={`text-xs capitalize ${activity.status === 'completed' ? 'text-green-400' :
-                                                activity.status === 'pending' ? 'text-yellow-400' : 'text-gray-500'
+                                            activity.status === 'pending' ? 'text-yellow-400' : 'text-gray-500'
                                             }`}>
                                             {activity.status}
                                         </p>

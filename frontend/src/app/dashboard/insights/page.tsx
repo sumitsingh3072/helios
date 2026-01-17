@@ -2,20 +2,50 @@
 
 import { GlassCard } from "@/components/dashboard/glass-card";
 import { WorldMap } from "@/components/dashboard/world-map";
-import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
-import { TrendingUp, Globe, Zap, Server, RefreshCw, AlertCircle } from "lucide-react";
+import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar, Cell } from "recharts";
+import { TrendingUp, Globe, Zap, Server, RefreshCw, AlertCircle, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { useInsights } from "@/hooks/useInsights";
 import { Button } from "@/components/ui/button";
+import { useFinancialInsightsStore } from "@/stores";
+import {
+    StatementUpload,
+    ClientProfileCard,
+    FinancialHealthCard,
+    KeyMetricsCards,
+    DetailedAnalysisCard,
+    RecommendationsCard,
+} from "@/components/insights";
 
 /**
  * Insights Page - Orchestrator
- * Uses useInsights hook for data, only responsible for layout
+ * Uses useInsights hook for network data and useFinancialInsightsStore for financial analysis
  */
 export default function InsightsPage() {
     const { networkStats, chartData, selectedPeriod, isLoading, error, setSelectedPeriod, refresh } = useInsights();
+    const {
+        report,
+        uploadedFileName,
+        isUploading,
+        error: uploadError,
+        uploadStatement,
+        clearReport,
+    } = useFinancialInsightsStore();
 
     const periods = ['1H', '1D', '1W', '1M', '1Y'];
+
+    // Transform report data for the spending chart
+    const getSpendingChartData = () => {
+        if (!report) return [];
+
+        const metrics = report.key_metrics;
+        return [
+            { name: 'Net Cash Flow', value: metrics.net_cash_flow.amount || 0, color: '#3B82F6' },
+            { name: 'Total Outflows', value: metrics.burn_rate.total_outflows || 0, color: '#F97316' },
+            { name: 'Fees Paid', value: metrics.cost_of_funds.fees_paid || 0, color: '#EF4444' },
+            { name: 'Interest Earned', value: metrics.cost_of_funds.interest_earned || 0, color: '#22C55E' },
+        ];
+    };
 
     if (error) {
         return (
@@ -37,11 +67,11 @@ export default function InsightsPage() {
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <h1 className="text-2xl md:text-3xl font-serif font-bold tracking-tight text-white">
-                            Global Intelligence
+                            Financial Insights
                         </h1>
                     </div>
                     <p className="text-gray-500 text-sm max-w-lg">
-                        Real-time surveillance of distributed assets and global network latency.
+                        Upload your bank statement for AI-powered financial analysis and personalized recommendations.
                     </p>
                 </div>
 
@@ -60,12 +90,126 @@ export default function InsightsPage() {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
                         </div>
-                        <span className="text-xs font-bold tracking-widest text-blue-200">LIVE FEED</span>
+                        <span className="text-xs font-bold tracking-widest text-blue-200">AI POWERED</span>
                     </div>
                 </div>
             </div>
 
-            {/* Global Map Section */}
+            {/* Upload Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1">
+                    <GlassCard className="p-6 bg-[#050A14] border-white/5 h-full">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                                <FileText className="w-4 h-4 text-blue-400" />
+                            </div>
+                            <h3 className="text-base font-bold text-white">Statement Analysis</h3>
+                        </div>
+                        <p className="text-xs text-gray-500 mb-4">
+                            Upload your bank statement to receive a comprehensive financial health report with actionable insights.
+                        </p>
+                        <StatementUpload
+                            onUpload={uploadStatement}
+                            isUploading={isUploading}
+                            uploadedFileName={uploadedFileName}
+                            onClear={clearReport}
+                        />
+                        {uploadError && (
+                            <p className="text-xs text-red-400 mt-3">{uploadError}</p>
+                        )}
+                    </GlassCard>
+                </div>
+
+                {/* Quick Stats / Overview */}
+                {report ? (
+                    <div className="lg:col-span-2">
+                        <ClientProfileCard profile={report.client_profile} />
+                    </div>
+                ) : (
+                    <div className="lg:col-span-2">
+                        <GlassCard className="p-6 bg-[#050A14] border-white/5 h-full flex items-center justify-center min-h-[200px]">
+                            <div className="text-center">
+                                <div className="p-4 bg-gray-800/50 rounded-full inline-block mb-4">
+                                    <FileText className="w-8 h-8 text-gray-600" />
+                                </div>
+                                <h3 className="text-lg font-bold text-gray-400 mb-2">No Statement Uploaded</h3>
+                                <p className="text-sm text-gray-600 max-w-sm">
+                                    Upload a bank statement to see your personalized financial health report and recommendations.
+                                </p>
+                            </div>
+                        </GlassCard>
+                    </div>
+                )}
+            </div>
+
+            {/* Financial Report Section - Only shown when report exists */}
+            {report && (
+                <>
+                    {/* Financial Health Assessment */}
+                    <FinancialHealthCard assessment={report.financial_health_assessment} />
+
+                    {/* Key Metrics */}
+                    <KeyMetricsCards metrics={report.key_metrics} />
+
+                    {/* Spending Chart & Detailed Analysis */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Spending Breakdown Chart */}
+                        <GlassCard className="p-6 bg-[#050A14] border-white/5">
+                            <div className="flex items-center gap-3 mb-5">
+                                <div className="p-2 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
+                                    <TrendingUp className="w-4 h-4 text-indigo-400" />
+                                </div>
+                                <h3 className="text-base font-bold text-white">Financial Breakdown</h3>
+                            </div>
+                            <div className="h-[250px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={getSpendingChartData()} layout="vertical">
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" horizontal={true} vertical={false} />
+                                        <XAxis
+                                            type="number"
+                                            stroke="#333"
+                                            tick={{ fill: '#666', fontSize: 10 }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tickFormatter={(value) => `$${value}`}
+                                        />
+                                        <YAxis
+                                            type="category"
+                                            dataKey="name"
+                                            stroke="#333"
+                                            tick={{ fill: '#888', fontSize: 11 }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                            width={100}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: '#000000',
+                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                borderRadius: '8px',
+                                            }}
+                                            formatter={(value: number) => [`$${value.toFixed(2)}`, 'Amount']}
+                                        />
+                                        <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                                            {getSpendingChartData().map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </GlassCard>
+
+                        {/* Detailed Analysis */}
+                        <DetailedAnalysisCard analysis={report.detailed_analysis} />
+                    </div>
+
+                    {/* Strategic Recommendations */}
+                    <RecommendationsCard recommendations={report.strategic_recommendations} />
+                </>
+            )}
+
+            {/* Global Map Section - Preserved from original */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[500px]">
                 <GlassCard variant="metallic" className="lg:col-span-2 relative p-0 overflow-hidden group border-white/5 min-h-[300px]">
                     <div className="absolute inset-0 z-0 opacity-80">
@@ -188,7 +332,7 @@ export default function InsightsPage() {
                 </div>
             </div>
 
-            {/* Chart Section */}
+            {/* Portfolio Chart Section */}
             <GlassCard className="p-6 md:p-8 h-[400px] relative border-white/5 bg-[#050A14]">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
                     <div>
@@ -198,7 +342,7 @@ export default function InsightsPage() {
                         <p className="text-sm text-gray-500">Cross-chain asset performance analysis.</p>
                     </div>
                     <div className="flex gap-2">
-                        {periods.map((t, i) => (
+                        {periods.map((t) => (
                             <button
                                 key={t}
                                 onClick={() => setSelectedPeriod(t)}

@@ -639,5 +639,52 @@ export const api = {
             });
             return handleResponse(response);
         }
+    },
+
+    // =========================================================================
+    // Financial Insights
+    // =========================================================================
+    financialInsights: {
+        /**
+         * Upload bank statement and get financial insights
+         * Backend: POST /api/v1/expense/financial/get-insights
+         */
+        getInsights: async (file: File): Promise<{
+            advisory_report: {
+                client_profile: {
+                    name: string;
+                    address: string;
+                    account_summary: {
+                        account_number_mask: string;
+                        currency: string;
+                        statement_period: string;
+                    };
+                };
+                financial_health_assessment: {
+                    liquidity_status: string;
+                    cash_flow_status: string;
+                    risk_level: string;
+                };
+                key_metrics: {
+                    net_cash_flow: { amount?: number; calculation?: string; insight: string };
+                    burn_rate: { total_outflows?: number; ratio_to_income?: string; insight: string };
+                    cost_of_funds: { fees_paid?: number; interest_earned?: number; net_cost?: number; insight: string };
+                };
+                detailed_analysis: Array<{ category: string; observation: string }>;
+                strategic_recommendations: Array<{ priority: string; action: string; rationale: string }>;
+            }
+        }> => {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch(`${API_V1}/expense/financial/get-insights`, {
+                method: 'POST',
+                headers: {
+                    ...tokenManager.getAuthHeaders(),
+                },
+                body: formData,
+            });
+            return handleResponse(response);
+        }
     }
 };

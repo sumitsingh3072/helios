@@ -17,7 +17,25 @@ interface ChatMessageProps {
  */
 export function ChatMessage({ message, isNew = false }: ChatMessageProps) {
     const isUser = message.role === "user";
-    const formattedTime = format(new Date(message.timestamp), "h:mm a");
+
+    // Safely format the timestamp, handling invalid dates
+    const getFormattedTime = () => {
+        try {
+            const date = message.timestamp instanceof Date
+                ? message.timestamp
+                : new Date(message.timestamp);
+
+            // Check if the date is valid
+            if (isNaN(date.getTime())) {
+                return "Just now";
+            }
+            return format(date, "h:mm a");
+        } catch {
+            return "Just now";
+        }
+    };
+
+    const formattedTime = getFormattedTime();
 
     return (
         <motion.div
