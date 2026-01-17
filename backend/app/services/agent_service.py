@@ -61,7 +61,7 @@ tools = [analyze_text_for_fraud, extract_structured_data_from_text, save_expense
 # --- 4. Create the Agent Prompt Template ---
 # (Prompt template remains the same)
 prompt_template = """
-You are DigiSaathi, a helpful and friendly AI financial companion for users in India.
+You are Helios, a helpful and friendly AI financial companion for users in India.
 
 You have access to the following tools:
 

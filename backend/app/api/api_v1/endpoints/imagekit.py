@@ -10,12 +10,8 @@ from pathlib import Path
 from fastapi import File, UploadFile
 
 router = APIRouter()
-
-
 imagekit = ImageKit(
-    private_key=os.getenv("IMAGEKIT_PRIVATE_KEY"),
-    public_key=os.getenv("IMAGEKIT_PUBLIC_KEY"),
-    url_endpoint=os.getenv("IMAGEKIT_URL_ENDPOINT")
+    private_key=os.getenv("IMAGEKIT_PRIVATE_KEY")
 )
 
 ALLOWED_TYPES = {
@@ -42,17 +38,16 @@ async def upload_and_sign(file: UploadFile = File(...)):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    print(upload_result)
-    source= upload_result.file_path
-    signed_url = imagekit.helper.build_url({
-        url_endpoint=os.getenv("IMAGEKIT_URL_ENDPOINT"),
+    # print(upload_result)
+    signed_url = imagekit.helper.build_url(
+        url_endpoint= os.getenv("IMAGEKIT_URL_ENDPOINT"),
         src=upload_result.file_path,
         signed=True,
-        expires_in=600
-    })
+        expire_seconds=600
+    )
 
     return {
-        "file_id": upload_result["fileId"],
+        "file_id": upload_result.file_id,
         "file_type": file.content_type,
         "signed_url": signed_url,
         "expires_in_seconds": 600

@@ -1,4 +1,5 @@
 import pytesseract
+import fitz # PyMuPDF
 from PIL import Image
 import io
 import json
@@ -16,6 +17,37 @@ def extract_text_from_image(image_bytes: bytes) -> str:
     except Exception as e:
         logging.error(f"Error during OCR processing: {e}")
         return "Error: Could not extract text from the image."
+
+def extract_text_from_pdf(pdf_bytes: bytes) -> str:
+    """
+    Extracts text from a PDF file by converting pages to images and using OCR.
+    Useful for both digital and scanned PDFs.
+    """
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        text = ""
+        for page in doc:
+            # Set zoom factor for better OCR (e.g., 2.0 = 144 DPI, 3.0 = 216 DPI)
+            zoom = 2.0
+            mat = fitz.Matrix(zoom, zoom)
+            
+            # Convert page to image (pixmap)
+            pix = page.get_pixmap(matrix=mat)
+            
+            # Convert pixmap details to bytes for PIL
+            img_bytes = pix.tobytes("png")
+            
+            # Create PIL Image
+            image = Image.open(io.BytesIO(img_bytes))
+            
+            # Extract text using Tesseract
+            page_text = pytesseract.image_to_string(image)
+            text += page_text + "\n"
+            
+        return text
+    except Exception as e:
+        logging.error(f"Error during PDF text extraction: {e}")
+        return "Error: Could not extract text from the PDF file."
 
 
 def extract_structured_data_from_text(text_to_analyze: str) -> dict:

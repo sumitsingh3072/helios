@@ -20,8 +20,12 @@ async def analyze_document_image(
     # 1. Read the image file contents
     contents = await file.read()
 
-    # 2. Extract the raw text using Tesseract OCR
-    raw_text = ocr_service.extract_text_from_image(contents)
+
+    # 2. Extract the raw text
+    if file.content_type == "application/pdf" or file.filename.lower().endswith(".pdf"):
+        raw_text = ocr_service.extract_text_from_pdf(contents)
+    else:
+        raw_text = ocr_service.extract_text_from_image(contents)
 
     # 3. Use the AI service to analyze the raw text and get structured data
     structured_data = ocr_service.extract_structured_data_from_text(raw_text)
