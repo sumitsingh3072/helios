@@ -283,6 +283,13 @@ function parseResponse(response: unknown): FinancialAdvisoryReport | null {
             const jsonStr = extractJsonFromAnswer(data.answer);
             const parsed = JSON.parse(jsonStr);
 
+            console.log('Parsed JSON from answer:', parsed);
+
+            // Handle { name: "financial_advisory_report", schema: {...} } format
+            if (parsed.schema && (parsed.name === 'financial_advisory_report' || parsed.schema.client_profile)) {
+                return normalizeReport(parsed.schema);
+            }
+
             if (parsed.financial_advisory_report) {
                 return normalizeReport(parsed.financial_advisory_report);
             }
@@ -292,6 +299,11 @@ function parseResponse(response: unknown): FinancialAdvisoryReport | null {
             }
 
             if (parsed.client_profile || parsed.client_information || parsed.account_holder) {
+                return normalizeReport(parsed);
+            }
+
+            // If parsed has financial_analysis, it's likely the report itself
+            if (parsed.financial_analysis) {
                 return normalizeReport(parsed);
             }
         }
@@ -306,6 +318,11 @@ function parseResponse(response: unknown): FinancialAdvisoryReport | null {
             return normalizeReport(data.financial_advisory);
         }
 
+        // Handle { schema: {...} } format directly
+        if (data.schema && data.schema.client_profile) {
+            return normalizeReport(data.schema);
+        }
+
         // Handle direct report format with various client identifiers
         if (data.client_profile || data.client_information || data.account_holder) {
             return normalizeReport(data);
@@ -313,6 +330,11 @@ function parseResponse(response: unknown): FinancialAdvisoryReport | null {
 
         // If we have executive_summary, treat it as a report
         if (data.executive_summary) {
+            return normalizeReport(data);
+        }
+
+        // If we have financial_analysis, treat it as a report
+        if (data.financial_analysis) {
             return normalizeReport(data);
         }
 
