@@ -40,12 +40,12 @@ export default function InsightsPage() {
 
     // Extract data if report exists
     const clientProfile = report?.client_profile;
-    const detailedAnalysis = report?.detailed_analysis;
+    const financialAnalysis = report?.financial_analysis;
     const executiveSummary = report?.executive_summary;
     const recommendations = report?.strategic_recommendations || [];
 
-    const totalCredits = detailedAnalysis?.cash_flow_dynamics.total_credits || 0;
-    const totalDebits = detailedAnalysis?.cash_flow_dynamics.total_debits || 0;
+    const totalCredits = financialAnalysis?.cash_flow_dynamics?.total_credits || 0;
+    const totalDebits = financialAnalysis?.cash_flow_dynamics?.total_debits || 0;
     const netCashFlow = totalCredits - totalDebits;
     const savingsRate = totalCredits > 0 ? ((netCashFlow / totalCredits) * 100) : 0;
 
@@ -110,7 +110,7 @@ export default function InsightsPage() {
                 </div>
 
                 {/* Quick Overview */}
-                {report && clientProfile && detailedAnalysis ? (
+                {report && clientProfile && financialAnalysis ? (
                     <div className="lg:col-span-2">
                         <GlassCard className="p-6 bg-[#050A14] border-white/5 h-full">
                             <div className="flex items-center gap-3 mb-4">
@@ -165,7 +165,7 @@ export default function InsightsPage() {
             </div>
 
             {/* Financial Details - Only shown when data exists */}
-            {report && detailedAnalysis && (
+            {report && financialAnalysis && (
                 <>
                     {/* Executive Summary */}
                     <GlassCard className="p-6 bg-[#050A14] border-white/5">
@@ -191,30 +191,30 @@ export default function InsightsPage() {
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
                                     <span className="text-sm text-gray-400">Status</span>
-                                    <span className="text-sm font-bold text-blue-400">{detailedAnalysis.liquidity_assessment.status}</span>
+                                    <span className="text-sm font-bold text-blue-400">{financialAnalysis.liquidity_assessment.status}</span>
                                 </div>
                                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
                                     <span className="text-sm text-gray-400">Starting Balance</span>
                                     <span className="text-sm font-bold text-orange-400">
-                                        ${detailedAnalysis.liquidity_assessment.start_balance.toFixed(2)}
+                                        ${financialAnalysis.liquidity_assessment.start_balance.toFixed(2)}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
                                     <span className="text-sm text-gray-400">Ending Balance</span>
                                     <span className="text-sm font-bold text-green-400">
-                                        ${detailedAnalysis.liquidity_assessment.end_balance.toFixed(2)}
+                                        ${financialAnalysis.liquidity_assessment.end_balance.toFixed(2)}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
                                     <span className="text-sm text-gray-400">Balance Change</span>
                                     <span className="text-sm font-bold text-green-400">
-                                        +${(detailedAnalysis.liquidity_assessment.end_balance - detailedAnalysis.liquidity_assessment.start_balance).toFixed(2)}
+                                        +${(financialAnalysis.liquidity_assessment.end_balance - financialAnalysis.liquidity_assessment.start_balance).toFixed(2)}
                                     </span>
                                 </div>
                             </div>
 
                             <div className="mt-4 p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
-                                <p className="text-xs text-gray-400">{detailedAnalysis.liquidity_assessment.insight}</p>
+                                <p className="text-xs text-gray-400">{financialAnalysis.liquidity_assessment.insight}</p>
                             </div>
                         </GlassCard>
 
@@ -230,31 +230,31 @@ export default function InsightsPage() {
                                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
                                     <span className="text-sm text-gray-400">Total Fees</span>
                                     <span className="text-sm font-bold text-red-400">
-                                        -${detailedAnalysis.cost_benefit_analysis.total_fees.toFixed(2)}
+                                        -${financialAnalysis.cost_benefit_analysis.total_fees.toFixed(2)}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
                                     <span className="text-sm text-gray-400">Interest (Period)</span>
                                     <span className="text-sm font-bold text-green-400">
-                                        +${detailedAnalysis.cost_benefit_analysis.interest_earned_period.toFixed(2)}
+                                        +${financialAnalysis.cost_benefit_analysis.interest_earned_period.toFixed(2)}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
                                     <span className="text-sm text-gray-400">Interest (YTD)</span>
                                     <span className="text-sm font-bold text-green-400">
-                                        +${detailedAnalysis.cost_benefit_analysis.interest_earned_ytd.toFixed(2)}
+                                        +${financialAnalysis.cost_benefit_analysis.interest_earned_ytd.toFixed(2)}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
                                     <span className="text-sm text-gray-400">Net Cost</span>
                                     <span className="text-sm font-bold text-orange-400">
-                                        -${(detailedAnalysis.cost_benefit_analysis.total_fees - detailedAnalysis.cost_benefit_analysis.interest_earned_period).toFixed(2)}
+                                        -${(financialAnalysis.cost_benefit_analysis.total_fees - financialAnalysis.cost_benefit_analysis.interest_earned_period).toFixed(2)}
                                     </span>
                                 </div>
                             </div>
 
                             <div className="mt-4 p-4 rounded-xl bg-orange-500/5 border border-orange-500/10">
-                                <p className="text-xs text-gray-400">{detailedAnalysis.cost_benefit_analysis.insight}</p>
+                                <p className="text-xs text-gray-400">{financialAnalysis.cost_benefit_analysis.insight}</p>
                             </div>
                         </GlassCard>
                     </div>
@@ -314,7 +314,7 @@ export default function InsightsPage() {
                                         </span>
                                     </div>
                                     <p className="text-xs text-gray-500 mt-2">
-                                        {detailedAnalysis.cash_flow_dynamics.net_flow_observation}
+                                        {financialAnalysis.cash_flow_dynamics.net_flow_observation}
                                     </p>
                                 </div>
                             </div>
@@ -421,7 +421,7 @@ export default function InsightsPage() {
 
                 {/* Summary Stats */}
                 <div className="flex flex-col gap-6">
-                    {report && detailedAnalysis ? (
+                    {report && financialAnalysis ? (
                         <>
                             <GlassCard variant="default" className="flex-1 p-6 relative overflow-hidden group border-white/5 bg-[#050A14]">
                                 <div className="absolute right-0 top-0 p-32 bg-orange-500/5 blur-[60px] pointer-events-none" />
@@ -431,7 +431,7 @@ export default function InsightsPage() {
                                             <Flame className="w-5 h-5 text-orange-400" />
                                         </div>
                                         <span className="text-xs font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded border border-orange-500/10">
-                                            ${detailedAnalysis.cost_benefit_analysis.total_fees.toFixed(2)}
+                                            ${financialAnalysis.cost_benefit_analysis.total_fees.toFixed(2)}
                                         </span>
                                     </div>
                                     <div>

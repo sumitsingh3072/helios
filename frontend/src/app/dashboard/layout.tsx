@@ -6,6 +6,9 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { AuthGuard } from "@/components/auth-guard";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { DialogTitle } from "@radix-ui/react-dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 export default function DashboardLayout({
     children,
@@ -29,6 +32,9 @@ export default function DashboardLayout({
                                 </Button>
                             </SheetTrigger>
                             <SheetContent side="left" className="p-0 border-r border-white/10 bg-black w-[85vw] max-w-[300px]">
+                                <VisuallyHidden>
+                                    <DialogTitle>Navigation Menu</DialogTitle>
+                                </VisuallyHidden>
                                 <AppSidebar isMobile={true} />
                             </SheetContent>
                         </Sheet>
@@ -38,7 +44,9 @@ export default function DashboardLayout({
                         {/* Subtle Background Effects */}
                         <div className="absolute top-0 left-0 w-full h-[500px] bg-blue-900/5 blur-[150px] pointer-events-none" />
                         <div className="relative z-10">
-                            {children}
+                            <ErrorBoundary>
+                                {children}
+                            </ErrorBoundary>
                         </div>
                     </main>
                 </div>

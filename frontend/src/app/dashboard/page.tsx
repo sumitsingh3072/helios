@@ -152,17 +152,19 @@ export default function DashboardPage() {
         );
     }
 
-    // Extract values from report
-    const { client_profile, detailed_analysis, executive_summary, strategic_recommendations } = report;
-    const { liquidity_assessment, cash_flow_dynamics, cost_benefit_analysis } = detailed_analysis;
+    // Extract values from report with safe defaults
+    const { client_profile, financial_analysis, executive_summary, strategic_recommendations } = report;
+    const { liquidity_assessment, cash_flow_dynamics, cost_benefit_analysis } = financial_analysis;
 
-    const totalCredits = cash_flow_dynamics.total_credits;
-    const totalDebits = cash_flow_dynamics.total_debits;
+    const totalCredits = cash_flow_dynamics.total_credits || 0;
+    const totalDebits = cash_flow_dynamics.total_debits || 0;
     const netCashFlow = totalCredits - totalDebits;
     const savingsRate = totalCredits > 0 ? ((netCashFlow / totalCredits) * 100) : 0;
     const burnRate = totalCredits > 0 ? ((totalDebits / totalCredits) * 100) : 0;
-    const balanceChange = liquidity_assessment.end_balance - liquidity_assessment.start_balance;
-    const growthPercent = ((liquidity_assessment.end_balance / liquidity_assessment.start_balance - 1) * 100);
+    const startBalance = liquidity_assessment.start_balance || 0.01; // Avoid division by zero
+    const endBalance = liquidity_assessment.end_balance || 0;
+    const balanceChange = endBalance - startBalance;
+    const growthPercent = startBalance > 0 ? ((endBalance / startBalance - 1) * 100) : 0;
 
     // Get liquidity status styling
     const getLiquidityStyle = () => {
@@ -294,7 +296,7 @@ export default function DashboardPage() {
                                 <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Starting Balance</p>
                             </div>
                             <p className="text-2xl font-bold text-orange-400 font-mono">
-                                ${liquidity_assessment.start_balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                ${startBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </p>
                         </div>
                     </GlassCard>
@@ -319,7 +321,7 @@ export default function DashboardPage() {
                                 <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Ending Balance</p>
                             </div>
                             <p className="text-2xl font-bold text-green-400 font-mono">
-                                ${liquidity_assessment.end_balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                ${endBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </p>
                         </div>
                     </GlassCard>
