@@ -26,8 +26,8 @@ interface SettingsState {
 const DEFAULT_SETTINGS: UserSettings = {
     spendingAlerts: true,
     weeklyReports: true,
-    displayName: 'Somil Gupta',
-    email: 'somil@example.com',
+    displayName: '',
+    email: '',
 };
 
 /**

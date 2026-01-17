@@ -15,11 +15,12 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { ModeToggle } from "@/components/mode-toggle";
+import { useAuthStore } from "@/stores";
 
 interface AppSidebarProps {
     className?: string;
@@ -37,7 +38,27 @@ const sidebarItems = [
 
 export function AppSidebar({ className, isMobile = false }: AppSidebarProps) {
     const pathname = usePathname();
+    const router = useRouter();
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const { user, logout } = useAuthStore();
+
+    // Handle logout
+    const handleLogout = () => {
+        logout();
+        router.push("/auth/login");
+    };
+
+    // Get user initials for avatar
+    const getUserInitials = () => {
+        if (user?.full_name) {
+            const names = user.full_name.split(" ");
+            if (names.length >= 2) {
+                return `${names[0][0]}${names[1][0]}`.toUpperCase();
+            }
+            return names[0].substring(0, 2).toUpperCase();
+        }
+        return "U";
+    };
 
     // Force expanded on mobile
     const collapseState = isMobile ? false : isCollapsed;
@@ -102,22 +123,41 @@ export function AppSidebar({ className, isMobile = false }: AppSidebarProps) {
                 </nav>
             </div>
 
-            <div className="mt-auto p-4 border-t border-white/5 relative z-10 flex flex-col gap-4">
+            <div className="mt-auto p-4 border-t border-white/5 relative z-10 flex flex-col gap-3">
                 {/* User Profile */}
                 <div className={cn(
                     "flex items-center gap-3 px-3 py-2 rounded-2xl bg-[#050A14] border border-white/5 hover:border-white/10 transition-colors cursor-pointer group overflow-hidden",
                     collapseState ? "justify-center p-2" : ""
                 )}>
                     <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center ring-2 ring-black/50 overflow-hidden">
-                        <div className="w-full h-full bg-black/20 flex items-center justify-center font-bold text-white text-[10px]">SG</div>
+                        <div className="w-full h-full bg-black/20 flex items-center justify-center font-bold text-white text-[10px]">{getUserInitials()}</div>
                     </div>
                     {!collapseState && (
-                        <div className="overflow-hidden min-w-0">
-                            <p className="font-bold text-sm text-white truncate group-hover:text-blue-400 transition-colors">Somil Gupta</p>
-                            <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold truncate">Pro Plan</p>
+                        <div className="overflow-hidden min-w-0 flex-1">
+                            <p className="font-bold text-sm text-white truncate group-hover:text-blue-400 transition-colors">
+                                {user?.full_name || user?.email || "User"}
+                            </p>
+                            <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold truncate">
+                                {user?.email || ""}
+                            </p>
                         </div>
                     )}
                 </div>
+
+                {/* Logout Button */}
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLogout}
+                    className={cn(
+                        "text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors h-10 border border-transparent hover:border-red-500/20",
+                        collapseState ? "w-full justify-center px-0" : "w-full justify-start px-4 gap-3"
+                    )}
+                    title={collapseState ? "Logout" : undefined}
+                >
+                    <LogOut className="h-4 w-4 shrink-0" />
+                    {!collapseState && <span>Logout</span>}
+                </Button>
 
                 {/* Collapse Toggle (Desktop Only) */}
                 {!isMobile && (
