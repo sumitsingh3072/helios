@@ -1,14 +1,57 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { FinancialInsightsResponse, Transaction, CalculatedInsights } from '@/types/financialInsights';
 import { api } from '@/services/api';
 
-interface FinancialInsightsState {
-    // Raw data from API
-    rawData: FinancialInsightsResponse | null;
+// Types matching the actual API response
+export interface ClientProfile {
+    name: string;
+    address: string;
+    account_number: string;
+    analysis_period: string;
+}
 
-    // Calculated insights
-    insights: CalculatedInsights | null;
+export interface LiquidityAssessment {
+    status: string;
+    start_balance: number;
+    end_balance: number;
+    insight: string;
+}
+
+export interface CashFlowDynamics {
+    total_credits: number;
+    total_debits: number;
+    net_flow_observation: string;
+}
+
+export interface CostBenefitAnalysis {
+    total_fees: number;
+    interest_earned_period: number;
+    interest_earned_ytd: number;
+    insight: string;
+}
+
+export interface DetailedAnalysis {
+    liquidity_assessment: LiquidityAssessment;
+    cash_flow_dynamics: CashFlowDynamics;
+    cost_benefit_analysis: CostBenefitAnalysis;
+}
+
+export interface Recommendation {
+    category: string;
+    action: string;
+    details: string;
+}
+
+export interface FinancialAdvisoryReport {
+    client_profile: ClientProfile;
+    executive_summary: string;
+    detailed_analysis: DetailedAnalysis;
+    strategic_recommendations: Recommendation[];
+}
+
+interface FinancialInsightsState {
+    // Parsed report from API
+    report: FinancialAdvisoryReport | null;
 
     uploadedFileName: string | null;
 
@@ -24,152 +67,80 @@ interface FinancialInsightsState {
 }
 
 /**
- * Calculate insights from raw transaction data
+ * Extract JSON from markdown code block
  */
-function calculateInsights(data: FinancialInsightsResponse): CalculatedInsights {
-    const transactions = data.transactions || [];
+function extractJsonFromAnswer(answer: string): string {
+    // Remove markdown code block markers
+    let json = answer.trim();
 
-    // Calculate totals
-    const totalIncome = transactions
-        .filter(t => t.type === 'CREDIT')
-        .reduce((sum, t) => sum + t.amount, 0);
+    // Remove ```json at the start
+    if (json.startsWith('```json')) {
+        json = json.slice(7);
+    } else if (json.startsWith('```')) {
+        json = json.slice(3);
+    }
 
-    const totalExpenses = transactions
-        .filter(t => t.type === 'DEBIT')
-        .reduce((sum, t) => sum + t.amount, 0);
+    // Remove ``` at the end
+    if (json.endsWith('```')) {
+        json = json.slice(0, -3);
+    }
 
-    const netCashFlow = totalIncome - totalExpenses;
-    const savingsRate = totalIncome > 0 ? ((netCashFlow / totalIncome) * 100) : 0;
-    const burnRate = totalIncome > 0 ? ((totalExpenses / totalIncome) * 100) : 0;
-
-    // Category breakdown
-    const categoryMap = new Map<string, number>();
-    transactions.filter(t => t.type === 'DEBIT').forEach(t => {
-        categoryMap.set(t.category, (categoryMap.get(t.category) || 0) + t.amount);
-    });
-
-    const categoryBreakdown = Array.from(categoryMap.entries())
-        .map(([category, amount]) => ({
-            category,
-            amount,
-            percentage: totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0
-        }))
-        .sort((a, b) => b.amount - a.amount);
-
-    // Top merchants
-    const merchantMap = new Map<string, { amount: number; count: number }>();
-    transactions.forEach(t => {
-        const existing = merchantMap.get(t.merchant) || { amount: 0, count: 0 };
-        merchantMap.set(t.merchant, {
-            amount: existing.amount + (t.type === 'DEBIT' ? t.amount : 0),
-            count: existing.count + 1
-        });
-    });
-
-    const topMerchants = Array.from(merchantMap.entries())
-        .map(([merchant, data]) => ({ merchant, ...data }))
-        .sort((a, b) => b.amount - a.amount)
-        .slice(0, 5);
-
-    // Payment modes
-    const modeMap = new Map<string, { amount: number; count: number }>();
-    transactions.forEach(t => {
-        const existing = modeMap.get(t.payment_mode) || { amount: 0, count: 0 };
-        modeMap.set(t.payment_mode, {
-            amount: existing.amount + t.amount,
-            count: existing.count + 1
-        });
-    });
-
-    const paymentModes = Array.from(modeMap.entries())
-        .map(([mode, data]) => ({ mode, ...data }))
-        .sort((a, b) => b.count - a.count);
-
-    return {
-        totalIncome,
-        totalExpenses,
-        netCashFlow,
-        savingsRate,
-        burnRate,
-        categoryBreakdown,
-        topMerchants,
-        paymentModes
-    };
+    return json.trim();
 }
 
 /**
- * Parse the API response and extract financial data
- * Handles various response formats from the backend
+ * Parse the API response
  */
-function parseResponse(response: unknown): FinancialInsightsResponse {
+function parseResponse(response: unknown): FinancialAdvisoryReport | null {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = response as any;
 
-    console.log('API Response:', JSON.stringify(data, null, 2));
+    console.log('Raw API Response:', data);
 
-    // If response has transactions array directly
-    if (Array.isArray(data.transactions)) {
-        return {
-            user_id: data.user_id || data.userId || 'unknown',
-            month: data.month || data.period || new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }),
-            currency: data.currency || 'INR',
-            transactions: data.transactions.map((t: unknown) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const txn = t as any;
-                return {
-                    date: txn.date || txn.transaction_date || '',
-                    merchant: txn.merchant || txn.description || txn.vendor || 'Unknown',
-                    category: txn.category || 'Uncategorized',
-                    amount: typeof txn.amount === 'number' ? txn.amount : parseFloat(txn.amount) || 0,
-                    type: (txn.type === 'CREDIT' || txn.type === 'credit' || txn.amount > 0 && !txn.type) ? 'CREDIT' : 'DEBIT',
-                    payment_mode: txn.payment_mode || txn.paymentMode || txn.method || 'Unknown'
-                } as Transaction;
-            })
-        };
+    try {
+        // Handle { answer: "```json...```" } format
+        if (data.answer && typeof data.answer === 'string') {
+            const jsonStr = extractJsonFromAnswer(data.answer);
+            const parsed = JSON.parse(jsonStr);
+
+            // Handle { financial_advisory_report: {...} } structure
+            if (parsed.financial_advisory_report) {
+                console.log('Parsed Report:', parsed.financial_advisory_report);
+                return parsed.financial_advisory_report as FinancialAdvisoryReport;
+            }
+
+            // Handle direct report structure
+            if (parsed.client_profile && parsed.detailed_analysis) {
+                return parsed as FinancialAdvisoryReport;
+            }
+        }
+
+        // Handle direct { financial_advisory_report: {...} } format
+        if (data.financial_advisory_report) {
+            return data.financial_advisory_report as FinancialAdvisoryReport;
+        }
+
+        // Handle direct report format
+        if (data.client_profile && data.detailed_analysis) {
+            return data as FinancialAdvisoryReport;
+        }
+
+        console.warn('Could not find financial_advisory_report in response');
+        return null;
+
+    } catch (err) {
+        console.error('Error parsing response:', err);
+        return null;
     }
-
-    // If response is the advisory_report format (legacy)
-    if (data.advisory_report) {
-        // Convert legacy format - create synthetic transactions from metrics
-        const report = data.advisory_report;
-        return {
-            user_id: report.client_profile?.name || 'User',
-            month: report.client_profile?.account_summary?.statement_period || 'Statement',
-            currency: report.client_profile?.account_summary?.currency || 'INR',
-            transactions: []
-        };
-    }
-
-    // If response itself looks like transaction data
-    if (data.date && data.merchant && data.amount !== undefined) {
-        return {
-            user_id: 'unknown',
-            month: new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }),
-            currency: 'INR',
-            transactions: [data as Transaction]
-        };
-    }
-
-    // Return empty structure if we can't parse
-    console.warn('Could not parse response format:', data);
-    return {
-        user_id: 'unknown',
-        month: 'Unknown Period',
-        currency: 'INR',
-        transactions: []
-    };
 }
 
 /**
- * Financial Insights Store - Zustand store for financial data
- * Handles file upload and calculates insights from transaction data
- * Persists the data to localStorage for reuse
+ * Financial Insights Store - Zustand store for financial advisory reports
  */
 export const useFinancialInsightsStore = create<FinancialInsightsState>()(
     persist(
         (set) => ({
-            rawData: null,
-            insights: null,
+            report: null,
             uploadedFileName: null,
             isLoading: false,
             isUploading: false,
@@ -180,26 +151,20 @@ export const useFinancialInsightsStore = create<FinancialInsightsState>()(
                     set({ isUploading: true, error: null });
 
                     const response = await api.financialInsights.getInsights(file);
+                    const report = parseResponse(response);
 
-                    // Parse the response flexibly
-                    const data = parseResponse(response);
-
-                    if (data.transactions.length === 0) {
+                    if (!report) {
                         set({
-                            rawData: data,
-                            insights: null,
+                            report: null,
                             uploadedFileName: file.name,
                             isUploading: false,
-                            error: 'No transactions found in the response. Check console for details.'
+                            error: 'Could not parse financial report from response'
                         });
                         return;
                     }
 
-                    const insights = calculateInsights(data);
-
                     set({
-                        rawData: data,
-                        insights,
+                        report,
                         uploadedFileName: file.name,
                         isUploading: false,
                         error: null
@@ -213,7 +178,7 @@ export const useFinancialInsightsStore = create<FinancialInsightsState>()(
             },
 
             clearReport: () => {
-                set({ rawData: null, insights: null, uploadedFileName: null, error: null });
+                set({ report: null, uploadedFileName: null, error: null });
             },
 
             clearError: () => set({ error: null }),
@@ -221,8 +186,7 @@ export const useFinancialInsightsStore = create<FinancialInsightsState>()(
         {
             name: 'helios-financial-insights',
             partialize: (state) => ({
-                rawData: state.rawData,
-                insights: state.insights,
+                report: state.report,
                 uploadedFileName: state.uploadedFileName,
             }),
         }

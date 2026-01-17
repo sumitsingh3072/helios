@@ -2,8 +2,7 @@
 
 import { GlassCard } from "@/components/dashboard/glass-card";
 import { WorldMap } from "@/components/dashboard/world-map";
-import { BarChart, Bar, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie } from "recharts";
-import { TrendingUp, Globe, RefreshCw, AlertCircle, FileText, Wallet, ArrowUpRight, ArrowDownRight, CreditCard, Calendar, Flame, PiggyBank } from "lucide-react";
+import { TrendingUp, Globe, RefreshCw, AlertCircle, FileText, Wallet, ArrowUpRight, ArrowDownRight, DollarSign, Calendar, Flame, PiggyBank, User, Activity, Lightbulb, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { useInsights } from "@/hooks/useInsights";
 import { Button } from "@/components/ui/button";
@@ -13,25 +12,18 @@ import { cn } from "@/lib/utils";
 
 /**
  * Insights Page - Financial Analysis
- * Displays transaction breakdown and insights from uploaded statements
+ * Displays financial advisory report from uploaded statements
  */
 export default function InsightsPage() {
     const { networkStats, isLoading, error, refresh } = useInsights();
     const {
-        rawData,
-        insights,
+        report,
         uploadedFileName,
         isUploading,
         error: uploadError,
         uploadStatement,
         clearReport,
     } = useFinancialInsightsStore();
-
-    // Category colors for charts
-    const categoryColors = [
-        '#F97316', '#3B82F6', '#8B5CF6', '#22C55E',
-        '#EC4899', '#EAB308', '#06B6D4', '#EF4444'
-    ];
 
     if (error) {
         return (
@@ -45,6 +37,17 @@ export default function InsightsPage() {
             </div>
         );
     }
+
+    // Extract data if report exists
+    const clientProfile = report?.client_profile;
+    const detailedAnalysis = report?.detailed_analysis;
+    const executiveSummary = report?.executive_summary;
+    const recommendations = report?.strategic_recommendations || [];
+
+    const totalCredits = detailedAnalysis?.cash_flow_dynamics.total_credits || 0;
+    const totalDebits = detailedAnalysis?.cash_flow_dynamics.total_debits || 0;
+    const netCashFlow = totalCredits - totalDebits;
+    const savingsRate = totalCredits > 0 ? ((netCashFlow / totalCredits) * 100) : 0;
 
     return (
         <div className="space-y-6 text-white min-h-screen pb-10 overflow-x-hidden">
@@ -107,38 +110,38 @@ export default function InsightsPage() {
                 </div>
 
                 {/* Quick Overview */}
-                {rawData && insights ? (
+                {report && clientProfile && detailedAnalysis ? (
                     <div className="lg:col-span-2">
                         <GlassCard className="p-6 bg-[#050A14] border-white/5 h-full">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="p-2 bg-green-500/10 border border-green-500/20 rounded-lg">
-                                    <Calendar className="w-4 h-4 text-green-400" />
+                                    <User className="w-4 h-4 text-green-400" />
                                 </div>
                                 <div>
-                                    <h3 className="text-base font-bold text-white">{rawData.month}</h3>
-                                    <p className="text-xs text-gray-500">{rawData.transactions.length} transactions • {rawData.currency}</p>
+                                    <h3 className="text-base font-bold text-white">{clientProfile.name}</h3>
+                                    <p className="text-xs text-gray-500">{clientProfile.analysis_period} • Acct: {clientProfile.account_number}</p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                                 <div className="p-4 rounded-xl bg-green-500/5 border border-green-500/10">
-                                    <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Income</p>
-                                    <p className="text-xl font-bold text-green-400">₹{insights.totalIncome.toLocaleString('en-IN')}</p>
+                                    <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Credits</p>
+                                    <p className="text-xl font-bold text-green-400">${totalCredits.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                                 </div>
-                                <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/10">
-                                    <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Expenses</p>
-                                    <p className="text-xl font-bold text-orange-400">₹{insights.totalExpenses.toLocaleString('en-IN')}</p>
+                                <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10">
+                                    <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Debits</p>
+                                    <p className="text-xl font-bold text-red-400">${totalDebits.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                                 </div>
                                 <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
-                                    <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Savings</p>
-                                    <p className={cn("text-xl font-bold", insights.netCashFlow >= 0 ? "text-blue-400" : "text-red-400")}>
-                                        ₹{insights.netCashFlow.toLocaleString('en-IN')}
+                                    <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Net Flow</p>
+                                    <p className={cn("text-xl font-bold", netCashFlow >= 0 ? "text-blue-400" : "text-red-400")}>
+                                        ${netCashFlow.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                     </p>
                                 </div>
                                 <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/10">
                                     <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Savings Rate</p>
-                                    <p className={cn("text-xl font-bold", insights.savingsRate >= 20 ? "text-green-400" : "text-yellow-400")}>
-                                        {insights.savingsRate.toFixed(1)}%
+                                    <p className={cn("text-xl font-bold", savingsRate >= 20 ? "text-green-400" : "text-yellow-400")}>
+                                        {savingsRate.toFixed(1)}%
                                     </p>
                                 </div>
                             </div>
@@ -162,203 +165,188 @@ export default function InsightsPage() {
             </div>
 
             {/* Financial Details - Only shown when data exists */}
-            {rawData && insights && (
+            {report && detailedAnalysis && (
                 <>
-                    {/* Charts Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Category Breakdown Chart */}
-                        <GlassCard className="p-6 bg-[#050A14] border-white/5">
-                            <div className="flex items-center gap-3 mb-5">
-                                <div className="p-2 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
-                                    <Wallet className="w-4 h-4 text-indigo-400" />
-                                </div>
-                                <h3 className="text-base font-bold text-white">Spending by Category</h3>
+                    {/* Executive Summary */}
+                    <GlassCard className="p-6 bg-[#050A14] border-white/5">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                                <FileText className="w-4 h-4 text-blue-400" />
                             </div>
-                            <div className="h-[280px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={insights.categoryBreakdown} layout="vertical">
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" horizontal={true} vertical={false} />
-                                        <XAxis
-                                            type="number"
-                                            stroke="#333"
-                                            tick={{ fill: '#666', fontSize: 10 }}
-                                            axisLine={false}
-                                            tickLine={false}
-                                            tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
-                                        />
-                                        <YAxis
-                                            type="category"
-                                            dataKey="category"
-                                            stroke="#333"
-                                            tick={{ fill: '#888', fontSize: 11 }}
-                                            axisLine={false}
-                                            tickLine={false}
-                                            width={90}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: '#000000',
-                                                border: '1px solid rgba(255,255,255,0.1)',
-                                                borderRadius: '8px',
-                                            }}
-                                            formatter={(value: number) => [`₹${value.toLocaleString('en-IN')}`, 'Amount']}
-                                        />
-                                        <Bar dataKey="amount" radius={[0, 4, 4, 0]}>
-                                            {insights.categoryBreakdown.map((_, index) => (
-                                                <Cell key={`cell-${index}`} fill={categoryColors[index % categoryColors.length]} />
-                                            ))}
-                                        </Bar>
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </GlassCard>
+                            <h3 className="text-base font-bold text-white">Executive Summary</h3>
+                        </div>
+                        <p className="text-gray-300 leading-relaxed">{executiveSummary}</p>
+                    </GlassCard>
 
-                        {/* Income vs Expense Summary */}
+                    {/* Liquidity & Balance Analysis */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <GlassCard className="p-6 bg-[#050A14] border-white/5">
                             <div className="flex items-center gap-3 mb-5">
                                 <div className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                                    <TrendingUp className="w-4 h-4 text-blue-400" />
+                                    <Activity className="w-4 h-4 text-blue-400" />
+                                </div>
+                                <h3 className="text-base font-bold text-white">Liquidity Assessment</h3>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                    <span className="text-sm text-gray-400">Status</span>
+                                    <span className="text-sm font-bold text-blue-400">{detailedAnalysis.liquidity_assessment.status}</span>
+                                </div>
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                    <span className="text-sm text-gray-400">Starting Balance</span>
+                                    <span className="text-sm font-bold text-orange-400">
+                                        ${detailedAnalysis.liquidity_assessment.start_balance.toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                    <span className="text-sm text-gray-400">Ending Balance</span>
+                                    <span className="text-sm font-bold text-green-400">
+                                        ${detailedAnalysis.liquidity_assessment.end_balance.toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                    <span className="text-sm text-gray-400">Balance Change</span>
+                                    <span className="text-sm font-bold text-green-400">
+                                        +${(detailedAnalysis.liquidity_assessment.end_balance - detailedAnalysis.liquidity_assessment.start_balance).toFixed(2)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="mt-4 p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                                <p className="text-xs text-gray-400">{detailedAnalysis.liquidity_assessment.insight}</p>
+                            </div>
+                        </GlassCard>
+
+                        <GlassCard className="p-6 bg-[#050A14] border-white/5">
+                            <div className="flex items-center gap-3 mb-5">
+                                <div className="p-2 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                                    <DollarSign className="w-4 h-4 text-orange-400" />
+                                </div>
+                                <h3 className="text-base font-bold text-white">Cost-Benefit Analysis</h3>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                    <span className="text-sm text-gray-400">Total Fees</span>
+                                    <span className="text-sm font-bold text-red-400">
+                                        -${detailedAnalysis.cost_benefit_analysis.total_fees.toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                    <span className="text-sm text-gray-400">Interest (Period)</span>
+                                    <span className="text-sm font-bold text-green-400">
+                                        +${detailedAnalysis.cost_benefit_analysis.interest_earned_period.toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                    <span className="text-sm text-gray-400">Interest (YTD)</span>
+                                    <span className="text-sm font-bold text-green-400">
+                                        +${detailedAnalysis.cost_benefit_analysis.interest_earned_ytd.toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                    <span className="text-sm text-gray-400">Net Cost</span>
+                                    <span className="text-sm font-bold text-orange-400">
+                                        -${(detailedAnalysis.cost_benefit_analysis.total_fees - detailedAnalysis.cost_benefit_analysis.interest_earned_period).toFixed(2)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="mt-4 p-4 rounded-xl bg-orange-500/5 border border-orange-500/10">
+                                <p className="text-xs text-gray-400">{detailedAnalysis.cost_benefit_analysis.insight}</p>
+                            </div>
+                        </GlassCard>
+                    </div>
+
+                    {/* Cash Flow & Recommendations */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Cash Flow */}
+                        <GlassCard className="p-6 bg-[#050A14] border-white/5">
+                            <div className="flex items-center gap-3 mb-5">
+                                <div className="p-2 bg-green-500/10 border border-green-500/20 rounded-lg">
+                                    <TrendingUp className="w-4 h-4 text-green-400" />
                                 </div>
                                 <h3 className="text-base font-bold text-white">Cash Flow Summary</h3>
                             </div>
 
                             <div className="space-y-6">
-                                {/* Income */}
+                                {/* Credits */}
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-2">
                                             <ArrowUpRight className="w-4 h-4 text-green-400" />
-                                            <span className="text-sm text-gray-400">Total Income</span>
+                                            <span className="text-sm text-gray-400">Total Credits</span>
                                         </div>
-                                        <span className="text-lg font-bold text-green-400">₹{insights.totalIncome.toLocaleString('en-IN')}</span>
+                                        <span className="text-lg font-bold text-green-400">${totalCredits.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                                     </div>
                                     <div className="h-3 w-full bg-black/50 rounded-full overflow-hidden">
                                         <div className="h-full bg-gradient-to-r from-green-600 to-green-400 shadow-[0_0_10px_#22C55E]" style={{ width: '100%' }} />
                                     </div>
                                 </div>
 
-                                {/* Expenses */}
+                                {/* Debits */}
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-2">
-                                            <ArrowDownRight className="w-4 h-4 text-orange-400" />
-                                            <span className="text-sm text-gray-400">Total Expenses</span>
+                                            <ArrowDownRight className="w-4 h-4 text-red-400" />
+                                            <span className="text-sm text-gray-400">Total Debits</span>
                                         </div>
-                                        <span className="text-lg font-bold text-orange-400">₹{insights.totalExpenses.toLocaleString('en-IN')}</span>
+                                        <span className="text-lg font-bold text-red-400">${totalDebits.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                                     </div>
                                     <div className="h-3 w-full bg-black/50 rounded-full overflow-hidden">
                                         <div
-                                            className="h-full bg-gradient-to-r from-orange-600 to-orange-400 shadow-[0_0_10px_#F97316]"
-                                            style={{ width: `${insights.burnRate}%` }}
+                                            className="h-full bg-gradient-to-r from-red-600 to-red-400 shadow-[0_0_10px_#EF4444]"
+                                            style={{ width: `${(totalDebits / totalCredits) * 100}%` }}
                                         />
                                     </div>
                                 </div>
 
-                                {/* Net Savings */}
+                                {/* Net Flow */}
                                 <div className="pt-4 border-t border-white/5">
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-2">
-                                            <PiggyBank className={cn("w-4 h-4", insights.netCashFlow >= 0 ? "text-blue-400" : "text-red-400")} />
-                                            <span className="text-sm text-gray-400">Net Savings</span>
+                                            <PiggyBank className={cn("w-4 h-4", netCashFlow >= 0 ? "text-blue-400" : "text-red-400")} />
+                                            <span className="text-sm text-gray-400">Net Cash Flow</span>
                                         </div>
-                                        <span className={cn("text-xl font-bold", insights.netCashFlow >= 0 ? "text-blue-400" : "text-red-400")}>
-                                            ₹{insights.netCashFlow.toLocaleString('en-IN')}
+                                        <span className={cn("text-xl font-bold", netCashFlow >= 0 ? "text-blue-400" : "text-red-400")}>
+                                            ${netCashFlow.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                         </span>
                                     </div>
-                                    <div className="h-3 w-full bg-black/50 rounded-full overflow-hidden">
-                                        <div
-                                            className={cn(
-                                                "h-full shadow-[0_0_10px]",
-                                                insights.netCashFlow >= 0
-                                                    ? "bg-gradient-to-r from-blue-600 to-blue-400"
-                                                    : "bg-gradient-to-r from-red-600 to-red-400"
-                                            )}
-                                            style={{ width: `${Math.max(Math.abs(insights.savingsRate), 5)}%` }}
-                                        />
-                                    </div>
                                     <p className="text-xs text-gray-500 mt-2">
-                                        {insights.savingsRate >= 20
-                                            ? '✨ Great job! You saved more than 20% of your income.'
-                                            : insights.savingsRate >= 10
-                                                ? '👍 Good start! Try to save at least 20% of your income.'
-                                                : '⚠️ Consider reducing expenses to save more.'}
+                                        {detailedAnalysis.cash_flow_dynamics.net_flow_observation}
                                     </p>
                                 </div>
                             </div>
                         </GlassCard>
-                    </div>
 
-                    {/* Transactions & Payment Methods */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Recent Transactions */}
+                        {/* Recommendations */}
                         <GlassCard className="p-6 bg-[#050A14] border-white/5">
                             <div className="flex items-center gap-3 mb-5">
                                 <div className="p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                                    <FileText className="w-4 h-4 text-amber-400" />
+                                    <Lightbulb className="w-4 h-4 text-amber-400" />
                                 </div>
-                                <h3 className="text-base font-bold text-white">Recent Transactions</h3>
+                                <h3 className="text-base font-bold text-white">Strategic Recommendations</h3>
                             </div>
-                            <div className="space-y-2 max-h-[350px] overflow-auto pr-2">
-                                {rawData.transactions.slice(0, 10).map((txn, index) => (
-                                    <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
-                                        <div className="flex items-center gap-3">
-                                            <div className={cn(
-                                                "w-8 h-8 rounded-full flex items-center justify-center",
-                                                txn.type === 'CREDIT' ? "bg-green-500/10" : "bg-orange-500/10"
-                                            )}>
-                                                {txn.type === 'CREDIT'
-                                                    ? <ArrowUpRight className="w-4 h-4 text-green-400" />
-                                                    : <ArrowDownRight className="w-4 h-4 text-orange-400" />
-                                                }
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-white">{txn.merchant}</p>
-                                                <p className="text-xs text-gray-500">{txn.category} • {txn.date}</p>
-                                            </div>
-                                        </div>
-                                        <span className={cn(
-                                            "text-sm font-mono font-bold",
-                                            txn.type === 'CREDIT' ? "text-green-400" : "text-orange-400"
-                                        )}>
-                                            {txn.type === 'CREDIT' ? '+' : '-'}₹{txn.amount.toLocaleString('en-IN')}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </GlassCard>
 
-                        {/* Payment Methods */}
-                        <GlassCard className="p-6 bg-[#050A14] border-white/5">
-                            <div className="flex items-center gap-3 mb-5">
-                                <div className="p-2 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
-                                    <CreditCard className="w-4 h-4 text-cyan-400" />
-                                </div>
-                                <h3 className="text-base font-bold text-white">Payment Methods</h3>
-                            </div>
                             <div className="space-y-4">
-                                {insights.paymentModes.map((mode, index) => {
-                                    const totalAmount = insights.paymentModes.reduce((sum, m) => sum + m.amount, 0);
-                                    const percentage = totalAmount > 0 ? (mode.amount / totalAmount) * 100 : 0;
+                                {recommendations.map((rec, index) => {
+                                    const categoryColors: Record<string, { bg: string; border: string; text: string }> = {
+                                        'Cost Reduction': { bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-400' },
+                                        'Risk Management': { bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', text: 'text-yellow-400' },
+                                        'Wealth Management': { bg: 'bg-green-500/10', border: 'border-green-500/20', text: 'text-green-400' },
+                                    };
+                                    const colors = categoryColors[rec.category] || { bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400' };
 
                                     return (
-                                        <div key={mode.mode} className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-medium text-white">{mode.mode}</span>
-                                                    <span className="text-xs text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">
-                                                        {mode.count} txns
-                                                    </span>
-                                                </div>
-                                                <span className="text-sm text-blue-400 font-mono font-bold">
-                                                    ₹{mode.amount.toLocaleString('en-IN')}
+                                        <div key={index} className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className={cn("text-[10px] font-bold px-2 py-1 rounded border", colors.bg, colors.border, colors.text)}>
+                                                    {rec.category}
                                                 </span>
                                             </div>
-                                            <div className="h-1.5 w-full bg-black/50 rounded-full overflow-hidden">
-                                                <div
-                                                    className={cn("h-full rounded-full", categoryColors[index % categoryColors.length])}
-                                                    style={{ width: `${percentage}%`, backgroundColor: categoryColors[index % categoryColors.length] }}
-                                                />
-                                            </div>
+                                            <p className="text-sm font-bold text-white mb-1">{rec.action}</p>
+                                            <p className="text-xs text-gray-500">{rec.details}</p>
                                         </div>
                                     );
                                 })}
@@ -368,7 +356,7 @@ export default function InsightsPage() {
                 </>
             )}
 
-            {/* Global Map Section - Preserved from original */}
+            {/* Global Map Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[500px]">
                 <GlassCard variant="metallic" className="lg:col-span-2 relative p-0 overflow-hidden group border-white/5 min-h-[300px]">
                     <div className="absolute inset-0 z-0 opacity-80">
@@ -433,9 +421,8 @@ export default function InsightsPage() {
 
                 {/* Summary Stats */}
                 <div className="flex flex-col gap-6">
-                    {rawData && insights ? (
+                    {report && detailedAnalysis ? (
                         <>
-                            {/* Burn Rate Card */}
                             <GlassCard variant="default" className="flex-1 p-6 relative overflow-hidden group border-white/5 bg-[#050A14]">
                                 <div className="absolute right-0 top-0 p-32 bg-orange-500/5 blur-[60px] pointer-events-none" />
                                 <div className="relative z-10 flex flex-col h-full justify-between">
@@ -444,21 +431,19 @@ export default function InsightsPage() {
                                             <Flame className="w-5 h-5 text-orange-400" />
                                         </div>
                                         <span className="text-xs font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded border border-orange-500/10">
-                                            {insights.burnRate.toFixed(0)}%
+                                            ${detailedAnalysis.cost_benefit_analysis.total_fees.toFixed(2)}
                                         </span>
                                     </div>
                                     <div>
-                                        <p className="text-sm text-gray-500 font-medium uppercase tracking-wider mb-1">Burn Rate</p>
-                                        <h3 className="text-4xl font-serif font-bold text-white">₹{(insights.totalExpenses / 1000).toFixed(0)}k</h3>
+                                        <p className="text-sm text-gray-500 font-medium uppercase tracking-wider mb-1">Total Fees</p>
                                         <p className="text-xs text-orange-400 mt-2 flex items-center gap-1">
                                             <span className="w-1 h-1 rounded-full bg-orange-400" />
-                                            Monthly spend
+                                            Service charges this period
                                         </p>
                                     </div>
                                 </div>
                             </GlassCard>
 
-                            {/* Savings Card */}
                             <GlassCard variant="blue" className="flex-1 p-6 relative overflow-hidden group">
                                 <div className="relative z-10 flex flex-col h-full justify-between">
                                     <div className="flex items-center justify-between">
@@ -467,20 +452,20 @@ export default function InsightsPage() {
                                         </div>
                                         <span className={cn(
                                             "text-xs font-bold px-2 py-1 rounded border",
-                                            insights.savingsRate >= 20
+                                            netCashFlow >= 0
                                                 ? "text-green-200 bg-green-500/20 border-green-500/20"
-                                                : "text-yellow-200 bg-yellow-500/20 border-yellow-500/20"
+                                                : "text-red-200 bg-red-500/20 border-red-500/20"
                                         )}>
-                                            {insights.savingsRate.toFixed(0)}%
+                                            {savingsRate.toFixed(0)}%
                                         </span>
                                     </div>
                                     <div>
-                                        <p className="text-sm text-blue-200/60 font-medium uppercase tracking-wider mb-1">Savings</p>
-                                        <h3 className="text-4xl font-serif font-bold text-white">
-                                            ₹{Math.abs(insights.netCashFlow / 1000).toFixed(0)}k
+                                        <p className="text-sm text-blue-200/60 font-medium uppercase tracking-wider mb-1">Net Flow</p>
+                                        <h3 className="text-3xl font-serif font-bold text-white">
+                                            ${Math.abs(netCashFlow).toFixed(2)}
                                         </h3>
                                         <p className="text-xs text-blue-200/50 mt-2">
-                                            {insights.netCashFlow >= 0 ? 'Monthly surplus' : 'Monthly deficit'}
+                                            {netCashFlow >= 0 ? 'Surplus this period' : 'Deficit this period'}
                                         </p>
                                     </div>
                                 </div>
@@ -494,7 +479,7 @@ export default function InsightsPage() {
                                         <Flame className="w-5 h-5 text-gray-600" />
                                     </div>
                                     <div>
-                                        <p className="text-sm text-gray-500 mb-1">Burn Rate</p>
+                                        <p className="text-sm text-gray-500 mb-1">Total Fees</p>
                                         <h3 className="text-2xl font-bold text-gray-600">--</h3>
                                         <p className="text-xs text-gray-600 mt-2">Upload statement</p>
                                     </div>
@@ -507,7 +492,7 @@ export default function InsightsPage() {
                                         <PiggyBank className="w-5 h-5 text-blue-400" />
                                     </div>
                                     <div>
-                                        <p className="text-sm text-blue-200/60 mb-1">Savings</p>
+                                        <p className="text-sm text-blue-200/60 mb-1">Net Flow</p>
                                         <h3 className="text-2xl font-bold text-gray-400">--</h3>
                                         <p className="text-xs text-blue-200/50 mt-2">Awaiting data</p>
                                     </div>
